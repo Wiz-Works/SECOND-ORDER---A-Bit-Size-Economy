@@ -541,7 +541,7 @@ const CRUSH_PROB_HAND=0.035;                       // ×g.industry — a real ch
 const CRUSH_ENERGY_MACHINE=10;                     // Crusher-assisted — cheaper
 const CRUSH_PROB_MACHINE=0.4;                      // ×g.industry — faster
 const CRUSHER_STONE=6,CRUSHER_GLASS=3;             // cost to build a Crusher on owned land
-const TRACTOR_IRON=10;                              // cost to craft a tractor — iron only, no gold needed
+const TRACTOR_IRON=5;                              // cost to craft a tractor — iron only, no gold needed
 const TRACTOR_SPEED=2;                             // cells moved per tick vs 1 normally
 const TRACTOR_HARVEST_RADIUS=20;
 const TRACTOR_HARVEST_COOLDOWN=20;                 // ticks between area-harvest sweeps
@@ -567,7 +567,7 @@ let tractorLiquidations=0,tractorLiquidationUnits=0;
    Cheap to get started (iron only) but starts weak — 10% efficiency —
    and gets upgraded in three steps, each costing more iron+oil and each
    adding another 10%, topping out at 40% for now. */
-const DRILL_IRON_COST=20;                        // to build — iron only, no oil needed up front
+const DRILL_IRON_COST=10;                        // to build — iron only, no oil needed up front
 const DRILL_BASE_EFFICIENCY=0.25;
 const DRILL_UPGRADE_COSTS=[{iron:10,oil:2},{iron:20,oil:4},{iron:30,oil:8}];  // tier 0->1, 1->2, 2->3, each +10% efficiency
 const DRILL_TANK_SIZE=40;
@@ -613,7 +613,7 @@ let drillUpgrades=0;
    let go immediately — a cash-strapped owner literally cannot sustain a
    full crew, which is the whole point: this isn't free money, it's a
    real bet that the oil is worth the payroll. */
-const OIL_DRILL_IRON_COST=20;
+const OIL_DRILL_IRON_COST=15;
 const OIL_DRILL_MAX_WORKERS=10;
 const OIL_DRILL_YIELD_PER_TICK=0.3;              // oil produced per tick at 100% efficiency (10 workers)
 const OIL_DRILL_WAGE_SHARE=0.7;                  // workers collectively get this share of the output's coin value; owner keeps the rest as margin
