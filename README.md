@@ -10,8 +10,16 @@ You are a spectator to this world, starting with an initial capital of **1.00$**
 
 <img width="1264" height="842" alt="image" src="https://github.com/user-attachments/assets/36b53347-d8d8-4b5a-9d0c-812641e54445" />
 
+---
+
+## How to Use
+
+*   Download the HTML file "Second Order 0.0.1.html".
+*   Open it on a browser (Most modern mainstrean browsers should work, in both PC and Mobile. Tested on Brave and Chrome).
+*   Play the game.
 
 ---
+
 
 ## How to Play
 
