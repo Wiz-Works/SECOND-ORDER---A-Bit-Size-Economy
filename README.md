@@ -1,5 +1,7 @@
 # Second Order - A Bit Size Economy
 
+**Note:** This project was vibe coded, while the entire economic desing and mechanics of the game is mine, the code it self was written by an AI model.
+
 In this game, you are a trader in an emerging economy starting with just $1. Watch markets and monetary systems develop from their infancy as you speculate on different commodities, sectors, and biomes.  The autonomous agents have unique genetic combinations, but overall they are programmed with simple logic: they move, eat, harvest, reproduce, trade items, and buy, rent, or build houses. From those simple rules, second-order phenomena like wealth inequality, housing crises, and inflation emerge.  The economy constantly reacts to its own ripples, agents will attempt to produce scarce commodities, deploy machinery to boost output, and respond to price signals. Meanwhile, the Fed attempts to keep the economy under control through interest rates, mintage rates, taxation, welfare, and gold manipulation.
 
 ---
@@ -99,3 +101,12 @@ You are a spectator to this world, starting with an initial capital of **1.00$**
 * **Taxation & Welfare Slants:** Influences fiscal policy by applying Fed multipliers to landlord rent taxes and production sales taxes, while skimming a percentage of welfare doles directly into the state reserve based on its gold alignment stance.
 * **Emergency Levers:** Under severe inflation, a hawkish head can enforce a hard minting halt for the remainder of their term, or launch emergency gold dump campaigns onto the open market to aggressively sell state gold and permanently burn circulating coins.
 * **Drill Loans:** Issues specialized infrastructure loans directly from state reserves to owners of gold and oil drills to keep energy production active when the reserve is flush.
+
+---
+
+## Issues
+
+* **Performance:** Performace deteriorates as the runs get longer and population expands.
+* **Wont run on background:** As is the game wont progress if you minimize the screen, and will remain paused for the most part.
+* **Bids can display as "bid: 0@0.000" under high supply:** If there is a lot of asks in the order book bids can get cleared inmedietly and the dashboard doesn't catch them, however you will still see volume going up.
+* **Glass/Sand Cyclical Balance:** On some runs mining drills will take long to be built causing a massive sand sortage for an extended period. It does eventually resolve but it could cause prices to to flatline and fluctuate in irrational ways.
