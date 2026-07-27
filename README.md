@@ -122,5 +122,6 @@ You are a spectator to this world, starting with an initial capital of **1.00$**
    * Your trades are now going through the order book: you won't be able to buy commodities with no asks, or sell into no bids. An option has been added to queue your order on the market for 4000 ticks       if theres no inmediete liquidity.
    * Better terrain.
    * Mining drills now cost 14 iron.
+   * A few performance tweaks. Long runs should now play be more stable.
      
 
