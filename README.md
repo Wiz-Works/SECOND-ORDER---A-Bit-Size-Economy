@@ -35,7 +35,8 @@ You are a spectator to this world, starting with an initial capital of **1.00$**
 
 ## The World
 
-<img width="712" height="668" alt="image" src="https://github.com/user-attachments/assets/150617e5-0837-4aa9-b4dd-a0a2c1920082" />
+<img width="753" height="792" alt="image" src="https://github.com/user-attachments/assets/8ea38a32-f209-4d7d-833e-baedd44f9373" />
+
 
 *   **Biomes:** The map features 3 different biomes: Deserts, Steppes, and Lowlands. Each favors the development of different sectors and contain different levels of resources.
 *   **Resources & Agriculture:** Agents autonomously gather raw materials and farm crops based on their needs.
@@ -110,3 +111,16 @@ You are a spectator to this world, starting with an initial capital of **1.00$**
 * **Wont run on background:** As is the game wont progress if you minimize the screen, and will remain paused for the most part.
 * **Bids can display as "bid: 0@0.000" under high supply:** If there is a lot of asks in the order book bids can get cleared inmedietly and the dashboard doesn't catch them, however you will still see volume going up.
 * **Glass/Sand Cyclical Balance:** On some runs mining drills will take long to be built causing a massive sand sortage for an extended period. It does eventually resolve but it could cause prices to to flatline and fluctuate in irrational ways.
+
+  
+---
+
+## Changes
+
+* **0.0.2:**
+   * Addded funds: Funds are baskets of either comodities, sectors or both. With some being actively managed. They buy and sell from the actual order book.
+   * Your trades are now going through the order book: you won't be able to buy commodities with no asks, or sell into no bids. An option has been added to queue your order on the market for 4000 ticks       if theres no inmediete liquidity.
+   * Better terrain.
+   * Mining drills now cost 14 iron.
+     
+
