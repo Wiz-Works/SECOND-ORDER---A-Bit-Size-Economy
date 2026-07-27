@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Second Order - A Bit Size Economy</title>
+<title>Second Order - A Bit Size Economy | WizWorks</title>
 <style>
   :root{
     --paper:#0f1216; --panel:#161c22; --ink:#d7e1e8; --dim:#7d8b96; --line:#232c34;
@@ -17,6 +17,7 @@
   header{padding:14px 20px 10px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
   header h1{font-size:15px;font-weight:600;letter-spacing:.08em}
   header h1 .ph{color:var(--dim);font-weight:400}
+  header h1 .byline{color:var(--trade);font-weight:600;font-size:0.62em;letter-spacing:.08em;text-transform:uppercase;margin-left:6px;opacity:.85}
   #tick{color:var(--dim);font-size:12px;min-width:190px}
   .controls{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
   button{background:none;border:1px solid var(--line);color:var(--ink);font-family:var(--mono);font-size:12px;padding:5px 12px;cursor:pointer;border-radius:3px}
@@ -67,7 +68,7 @@
 </head>
 <body>
 <header>
-  <h1>SECOND ORDER <span class="ph">- a bit size economy</span></h1>
+  <h1>SECOND ORDER <span class="ph">- a bit size economy</span> <span class="byline">by WizWorks</span></h1>
   <div id="tick">tick 0 · gen — · —</div>
   <div class="controls">
     <button id="btnPause" class="active">running</button>
@@ -218,6 +219,7 @@
         <button class="histCatBtn active" data-cat="commodity">Commodities</button>
         <button class="histCatBtn" data-cat="sector">Sectors</button>
         <button class="histCatBtn" data-cat="biome">Biomes</button>
+        <button class="histCatBtn" data-cat="fund">Funds</button>
       </div>
       <div id="histItemButtons" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;"></div>
       <canvas class="chart" id="chHist" style="height:150px;"></canvas>
@@ -342,7 +344,7 @@
       <div class="statrow"><span style="color:#f0c43c;">Mining Drills Built / Upgrades</span><b id="sDrillsBuilt">0 / 0</b></div>
       <div class="statrow"><span>Drill Gold / Sand Produced</span><b id="sDrillYield">0.00 / 0.00</b></div>
       <div class="statrow"><span>Drill Oil Bought / Blocked-Idle</span><b id="sDrillOil">0 / 0</b></div>
-      <div style="font-size:10px;color:var(--dim);margin-top:2px;">A drill is a permanent structure on land you own — produces gold and sand indefinitely instead of depleting a fixed deposit, the actual fix for eventual resource exhaustion. Costs 20 iron to build (no oil needed up front) but starts at only 25% efficiency; three upgrades (10i/2o, 20i/4o, 30i/8o) each add another 25%, reaching 100% at full upgrade. Gold goes straight to whoever currently owns the tile; sand tops up that tile's own deposit for the normal glass-smelting pipeline. Runs on its own oil tank refueled from the market. If you sell the land, whoever owns it now gets the output.</div>
+      <div style="font-size:10px;color:var(--dim);margin-top:2px;">A drill is a permanent structure on land you own — produces gold and sand indefinitely instead of depleting a fixed deposit, the actual fix for eventual resource exhaustion. Costs 14 iron to build (no oil needed up front) but starts at only 25% efficiency; three upgrades (10i/2o, 20i/4o, 30i/8o) each add another 25%, reaching 100% at full upgrade. Gold goes straight to whoever currently owns the tile; sand tops up that tile's own deposit for the normal glass-smelting pipeline. Runs on its own oil tank refueled from the market. If you sell the land, whoever owns it now gets the output.</div>
     </div>
 
     <!-- MODULE 4i: OIL PRODUCERS — DRILLS -->
@@ -472,6 +474,26 @@
       <canvas class="chart" id="chPop"></canvas>
     </div>
 
+    <!-- MODULE 8b: FUNDS -->
+    <div class="card">
+      <h2>Funds &mdash; indexed to 100 at inception</h2>
+      <div class="statrow"><span>Rebalances / Fees Charged</span><b id="sFundReb">0 / 0</b></div>
+      <div class="statrow"><span>Live Fund &mdash; Fill Rate (filled &divide; intended)</span><b id="sFundFill">&mdash;</b></div>
+      <div class="statrow"><span>Live Fund &mdash; Seed / Minted / Tax Paid</span><b id="sFundSeed">&mdash;</b></div>
+      <div class="statrow"><span style="color:#8fd4e8;">Broad Basket (buy &amp; hold)</span><b id="sFundBroad">&mdash;</b></div>
+      <div class="statrow"><span style="color:#57c7a3;">Broad Managed (rebalanced 2k)</span><b id="sFundBroadMgd">&mdash;</b></div>
+      <div class="statrow"><span style="color:var(--dim);">Managed minus Buy &amp; Hold</span><b id="sFundSpread">&mdash;</b></div>
+      <canvas class="chart" id="chFunds"></canvas>
+      <div class="legend">
+        <span><i class="dot" style="background:#8fd4e8"></i>Broad</span>
+        <span><i class="dot" style="background:#57c7a3"></i>Managed</span>
+        <span><i class="dot" style="background:#e8b04b"></i>Growth 3</span>
+        <span><i class="dot" style="background:#c98a5a"></i>Top Sectors</span>
+        <span><i class="dot" style="background:#d4695f"></i>High Risk</span>
+        <span><i class="dot" style="background:#9a86c8"></i>All Sectors</span>
+      </div>
+    </div>
+
     <!-- MODULE 8: SPECIATION GENOME MAP -->
     <div class="card">
       <h2>23. Behavioral Genetics Census</h2>
@@ -567,7 +589,7 @@ let tractorLiquidations=0,tractorLiquidationUnits=0;
    Cheap to get started (iron only) but starts weak — 10% efficiency —
    and gets upgraded in three steps, each costing more iron+oil and each
    adding another 10%, topping out at 40% for now. */
-const DRILL_IRON_COST=10;                        // to build — iron only, no oil needed up front
+const DRILL_IRON_COST=14;                        // to build — iron only, no oil needed up front
 const DRILL_BASE_EFFICIENCY=0.25;
 const DRILL_UPGRADE_COSTS=[{iron:10,oil:2},{iron:20,oil:4},{iron:30,oil:8}];  // tier 0->1, 1->2, 2->3, each +10% efficiency
 const DRILL_TANK_SIZE=40;
@@ -766,20 +788,111 @@ function addQty(a,item,delta){
     case 'lettuce':a.food[2]+=delta;break; case 'rice':a.food[3]+=delta;break;
   }
 }
+/* Demand measured as FLOW, not resting stock. Under heavy supply every
+   incoming bid is marketable -- it crosses and fills in the same
+   matchBidsAsks pass, so the resting book is structurally empty and
+   scarcityPressure would read a permanent glut, mark sellers down, and
+   make even more bids marketable. Self-reinforcing. Filled demand is
+   still demand, so it is counted for BID_FLOW_WINDOW ticks. */
+const BID_FLOW_WINDOW=50;
+let FLOW_WEIGHT=5;          // tuning knob: how many ticks of flow ~= one unit of resting stock
+const bidFlowBuf={},bidFlowIdx={},bidFlowSum={},bidFlowFilled={},bidFlowThisTick={};
+for(const k of MARKET_ITEMS){
+  bidFlowBuf[k]=new Float64Array(BID_FLOW_WINDOW);
+  bidFlowIdx[k]=0;bidFlowSum[k]=0;bidFlowFilled[k]=0;bidFlowThisTick[k]=0;
+}
+function rollBidFlow(){
+  for(const k of MARKET_ITEMS){
+    const buf=bidFlowBuf[k],i=bidFlowIdx[k];
+    bidFlowSum[k]+=bidFlowThisTick[k]-buf[i];
+    buf[i]=bidFlowThisTick[k];
+    bidFlowIdx[k]=(i+1)%BID_FLOW_WINDOW;
+    if(bidFlowFilled[k]<BID_FLOW_WINDOW)bidFlowFilled[k]++;
+    bidFlowThisTick[k]=0;
+  }
+}
+// running sum drifts on float subtraction over long runs; clamp at zero
+function bidFlowAvg(item){
+  const n=bidFlowFilled[item];
+  return n?Math.max(0,bidFlowSum[item])/n:0;
+}
+/* --- LOCAL PRICE LEARNING (fill-rate feedback) ------------------------
+   Real prices rise under shortage because individual traders adapt to
+   their OWN fills, not because a broadcast signal tells everyone to mark
+   up at once. A seller whose listing vanishes instantly was underpriced
+   and raises; one left sitting cuts. A buyer who goes unfilled raises
+   their bid; one filled immediately can shade down.
+
+   This is what scarcityPressure could not do. Being a single global
+   number, it moves every agent identically -- the synthetic cartel the
+   maybeListForSale comment warns about. Per-agent memory produces real
+   dispersion instead, because no two agents have the same fill history.
+
+   It also breaks a genuine fixed point on the buy side: bids were posted
+   at exactly marketRefPrice, and for shortage items (iron, glass) the
+   executions happen by sellers dumping INTO those bids, so the clearing
+   price WAS the reference price. ref -> trade at ref -> ref. No amount of
+   seller-side markup could escape it, because the ask floor (0.005) sat
+   above where those items actually traded.
+
+   Adjustments are cooldown-gated: postBid/maybeListForSale can fire many
+   times per commodity per tick, and an ungated 5% step compounds to the
+   clamp in seconds of wall time. */
+const PRICE_ADJ_COOLDOWN=50;   // min ticks between adjustments, per agent per item per side
+const PRICE_FAST_FILL=120;     // filled/sold within this many ticks = priced too cheap
+const ASK_UP=1.05, ASK_DOWN=0.97;
+const BID_UP=1.06, BID_DOWN=0.97;
+const PRICE_MULT_MIN=0.4, PRICE_MULT_MAX=3;
+let priceLearnAskUp=0,priceLearnAskDown=0,priceLearnBidUp=0,priceLearnBidDown=0;
+function pmem(a){
+  if(!a._pm)a._pm={ask:{},bid:{},lastAsk:{},lastBid:{}};
+  return a._pm;
+}
+/* seller: consult own last listing for this item before pricing a new one */
+function askMult(a,item){
+  const pm=pmem(a),last=pm.lastAsk[item];
+  if(last!==undefined&&tick-last>=PRICE_ADJ_COOLDOWN){
+    const stillResting=market[item].some(o=>o.id===a.id&&o.qty>0.001);
+    const cur=pm.ask[item]||1;
+    if(stillResting){pm.ask[item]=clamp(cur*ASK_DOWN,PRICE_MULT_MIN,PRICE_MULT_MAX);priceLearnAskDown++;}
+    else if(tick-last<PRICE_FAST_FILL){pm.ask[item]=clamp(cur*ASK_UP,PRICE_MULT_MIN,PRICE_MULT_MAX);priceLearnAskUp++;}
+    pm.lastAsk[item]=tick;
+  }else if(last===undefined)pm.lastAsk[item]=tick;
+  return pm.ask[item]||1;
+}
+/* buyer: consult own last bid for this item before pricing a new one */
+function bidMult(buyer,item){
+  const pm=pmem(buyer),last=pm.lastBid[item];
+  if(last!==undefined&&tick-last>=PRICE_ADJ_COOLDOWN){
+    const stillResting=bids[item].some(o=>o.id===buyer.id&&o.qty>0.001);
+    const cur=pm.bid[item]||1;
+    if(stillResting){pm.bid[item]=clamp(cur*BID_UP,PRICE_MULT_MIN,PRICE_MULT_MAX);priceLearnBidUp++;}
+    else if(tick-last<PRICE_FAST_FILL){pm.bid[item]=clamp(cur*BID_DOWN,PRICE_MULT_MIN,PRICE_MULT_MAX);priceLearnBidDown++;}
+    pm.lastBid[item]=tick;
+  }else if(last===undefined)pm.lastBid[item]=tick;
+  return pm.bid[item]||1;
+}
 /* how starved is this item's book right now — lots of standing demand
    (bids) against thin or no supply (asks) pushes this above 1; a glut of
    asks against thin demand pushes it below 1. Sellers use this to price
    deliberately, not just react after the fact once a trade completes. */
 function scarcityPressure(item){
   const askQty=market[item].reduce((s,o)=>s+o.qty,0);
-  const bidQty=bids[item].reduce((s,o)=>s+o.qty,0);
+  const resting=bids[item].reduce((s,o)=>s+o.qty,0);
+  const bidQty=resting+bidFlowAvg(item)*FLOW_WEIGHT;
   // sand's shortage (drill-byproduct-only supply, thin/zero asks) kept
   // it structurally pinned at the global 3x ceiling, which then fed
   // straight into every seller's markup (scaled by their own hoard —
   // see maybeListForSale) and compounded into runaway spirals. Sand
   // gets a much lower ceiling than everything else so a real shortage
   // still moves the price, just not into a self-reinforcing extreme.
-  const ceiling=item==='sand'?1.20:2;
+  // gold gets sand's treatment for the same structural reason: its ask
+  // book is frequently empty (see the cleanup note in the direct-fill
+  // path), so askQty sits near zero while bid FLOW is real and steady.
+  // Left at the global 2x that ratio pins at the ceiling permanently and
+  // every gold seller marks up to max at once -- the exact synthetic
+  // cartel the markup-scaling comment below is guarding against.
+  const ceiling=item==='sand'?1.20:item==='gold'?1.35:2;
   return clamp((bidQty+1)/(askQty+1),0.5,ceiling);
 }
 /* seller side: list surplus above a personal reserve at an ask anchored to
@@ -851,7 +964,7 @@ function maybeListForSale(a){
     // market is; hoard=1 charges the full premium, same as before.
     const effPressure=1+(pressure-1)*g.hoard;
     const markup=(1+(g.priceBold-0.5)*0.6+(Math.random()-0.5)*0.2)*effPressure;
-    const price=Math.max(0.005,ref*markup);
+    const price=Math.max(0.005,ref*markup*askMult(a,item));
     market[item].push({id:a.id,qty:listQty,price,tick});
     marketOrdersPosted++;
   }
@@ -1048,6 +1161,7 @@ function marketBuy(buyer,item,qtyNeeded){
    refunded the moment it fills. */
 function postBid(buyer,item,qty,price){
   if(qty<=0||price<=0)return;
+  price*=bidMult(buyer,item);   // willingness-to-pay learned from own fill history
   const affordableQty=Math.floor(buyer.coins/price);
   const actualQty=Math.min(qty,affordableQty);
   if(actualQty<=0)return;
@@ -1068,6 +1182,7 @@ function postBid(buyer,item,qty,price){
    the buyer if it actually executed cheaper (e.g. crossed against a
    lower ask), and pays the seller the real execution price. */
 function settleBidFill(bid,buyer,seller,take,execPrice,item){
+  bidFlowThisTick[item]+=take;   // count filled demand as demand
   const escrowUsed=take*bid.price;
   const actualCost=take*execPrice;
   const refund=escrowUsed-actualCost;
@@ -1497,7 +1612,7 @@ function biomeEconomyPriceRaw(biomeIdx){
   for(const a of agents)if(biomeAt(a.y)===biomeIdx){sum+=netWorth(a);count++;}
   return count>0?sum/count:0;
 }
-/* trading/charts read the SMOOTHED price (2,000-tick moving average,
+/* trading/charts read the SMOOTHED price (1,000-tick moving average,
    maintained in biomePriceHist at sample time — see the sampling block
    below), not the raw instantaneous mean net worth per capita. Raw
    swings tick to tick as agents die/are born/change land, which made
@@ -1564,7 +1679,7 @@ const SECTOR_DESC={
 const SECTOR_ACT_FIELD={mine:'actMine',collect:'actCollect',glass:'actGlass',rent:'actRent',lend:'actLend',oil:'actOil',farm:'actFarm',merchant:'actMerchant',speculate:'actSpeculate'};
 let sectorPriceHist={};for(const k of SECTOR_KEYS)sectorPriceHist[k]=[];
 let biomePriceHist=[[],[],[]];
-const SECTOR_MA_WINDOW=2000;   // sectors and biomes trade off a 2k-tick moving average, not the raw instantaneous figure — raw was too erratic tick to tick
+const SECTOR_MA_WINDOW=1000;   // sectors and biomes trade off a 1k-tick moving average, not the raw instantaneous figure — raw was too erratic tick to tick
 let sectorRawRecent={};for(const k of SECTOR_KEYS)sectorRawRecent[k]=[];
 let biomeRawRecent=[[],[],[]];
 /* raw counts aren't comparable across sectors — mining/collecting/
@@ -1618,7 +1733,7 @@ function sectorPriceFromStats(stats,sectorKey){
   return s&&s.count>0?s.sum/s.count:0;
 }
 /* same smoothing as biomeEconomyPrice above — trading/charts read the
-   2,000-tick moving average (maintained in sectorPriceHist at sample
+   1,000-tick moving average (maintained in sectorPriceHist at sample
    time), not the raw instantaneous figure. Falls back to raw only
    before the first sample exists. */
 function sectorPrice(sectorKey){
@@ -1626,6 +1741,382 @@ function sectorPrice(sectorKey){
   return h&&h.length?h[h.length-1].p:sectorPriceFromStats(computeSectorStats(),sectorKey);
 }
 let sectorShares={},sectorCostBasis={},sectorEntryTick={};
+
+/* --- FUNDS ------------------------------------------------------------
+   Six paper indices over assets that are ALREADY priced elsewhere: no new
+   economics, just arithmetic on discoveredCoinPrice (commodities) and
+   sectorPrice (sectors). They are synthetic -- they hold notional units
+   and never touch the order book -- but they store real per-leg unit
+   counts rather than a bare index number, so making them transact later
+   is a matter of routing the rebalance deltas through marketBuy/postBid
+   instead of a rewrite.
+
+   Every fund starts at FUND_START_VALUE with equal VALUE per leg, so the
+   printed price is directly readable as a percentage of inception.
+
+   Weighting note: legs are equal-VALUE at inception and at each rebalance,
+   never equal-unit. Commodity prices span ~100x in a single snapshot
+   (iron 0.003 vs rice 0.346), so equal units would make rice the entire
+   index and iron a rounding error. Equal value means each leg contributes
+   its percentage move equally, which is what "equally weighted" means
+   everywhere else.
+
+   Zero-priced legs: a sector with nobody in it prices at 0 (sum/count
+   guard in sectorPriceFromStats). Per design that is a TOTAL LOSS, not a
+   forced exit -- the units are retained untouched, so if the sector
+   repopulates the position revives at its original size. Rebalancing
+   skips those legs (can't divide by zero) and splits value equally among
+   the survivors. */
+const FUND_KEYS=['broad','broadMgd','growth','topSec','risk','allSec'];
+const FUND_NAMES={broad:'Broad Basket',broadMgd:'Broad Managed',growth:'Growth 3',
+  topSec:'Top Sectors',risk:'High Risk',allSec:'All Sectors'};
+const FUND_COLOR={broad:'#8fd4e8',broadMgd:'#57c7a3',growth:'#e8b04b',
+  topSec:'#c98a5a',risk:'#d4695f',allSec:'#9a86c8'};
+const FUND_DESC={
+  broad:'All ten commodities, equal value at inception, then never touched again. Pure buy-and-hold: winners are allowed to grow into a larger and larger share of the fund. No management, no fee. The baseline every other fund is measured against.',
+  broadMgd:'The same ten commodities, but rebalanced back to equal value every 2,000 ticks — systematically selling what rose and buying what fell. Charges a 0.5% management fee every 10,000 ticks. Its gap versus the Broad Basket is a direct read on whether this economy trends or mean-reverts.',
+  growth:'The three commodities with the strongest price growth over the trailing 5,000 ticks, refreshed every 2,000. Momentum: it buys what has already run. Note it will tend to select whatever is in shortage, which is also whatever is least liquid.',
+  topSec:'The three sectors with the highest share price, equal value, refreshed every 5,000 ticks. Sector price is mean net worth per member, so this tracks where wealth concentrates per head — which is usually the smaller sectors, not the largest.',
+  risk:'A deliberately concentrated bet: sand, lettuce and Traders, equal value, rebalanced every 2,000 ticks. Two thin commodity books plus the sector whose members carry open leveraged positions.',
+  allSec:'All nine sectors, equal value, rebalanced every 2,000 ticks. The sector-side benchmark for the Top Sectors and High Risk funds.'
+};
+const FUND_MGMT_FEE=0.005;      // 0.5%
+const FUND_FEE_EVERY=10000;     // ticks between fee charges
+const FUND_START_VALUE=100;     // inception value, so price reads as % of inception
+const FUND_GROWTH_LOOKBACK=5000;
+const FUND_DEFS={
+  broad:   {legs:()=>MARKET_ITEMS.map(k=>({cat:'commodity',key:k})), rebalance:0,    fee:false},
+  broadMgd:{legs:()=>MARKET_ITEMS.map(k=>({cat:'commodity',key:k})), rebalance:2000, fee:true},
+  growth:  {legs:()=>pickTopGrowth(3),                               rebalance:2000, fee:true, dynamic:true, warmup:FUND_GROWTH_LOOKBACK},
+  topSec:  {legs:()=>pickTopSectors(3),                              rebalance:5000, fee:true, dynamic:true},
+  risk:    {legs:()=>[{cat:'commodity',key:'sand'},{cat:'commodity',key:'lettuce'},{cat:'sector',key:'speculate'}],
+                                                                     rebalance:2000, fee:true},
+  allSec:  {legs:()=>SECTOR_KEYS.map(k=>({cat:'sector',key:k})),      rebalance:2000, fee:true}
+};
+let funds={},fundPriceHist={},fundShares={},fundCostBasis={},fundEntryTick={};
+let fundRebalances=0,fundFeesCharged=0,expandedFund=null;
+/* --- LIVE FUNDS: rebalancing against the real order book ---------------
+   A synthetic fund has infinite liquidity, and that is not a cosmetic
+   simplification -- it is what let the rebalanced funds compound to 1e16.
+   Equal-weight rebalancing between assets with wildly divergent relative
+   prices is a volatility pump (Shannon's demon): you mechanically sell
+   whatever rose and buy whatever fell, every period, and that compounds
+   exponentially with no skill involved. The maths is legitimate. What is
+   NOT legitimate is being able to buy billions of units of sand out of a
+   book holding 572.
+
+   So a live fund transacts: it walks the real ask book to buy and the real
+   bid book to sell, competing with agents at real prices, paying real
+   production tax on the ask side. Its own orders move the prices it is
+   trying to hit, which is the feedback that bounds the pump.
+
+   Only commodity legs can do this. Sector shares have NO order book and no
+   counterparty -- buySectorShares mints shares from capitalAmount/price and
+   nobody gives anything up -- so there is nothing for a sector trade to
+   impact. Funds holding sector legs stay paper (see fundIsLive), and would
+   need a float cap on sector market cap instead.
+
+   Shares in a live fund are still paper: buying them does not inject
+   capital into the fund. The fund trades only its seed and what it earns. */
+const FUND_LIVE={broadMgd:true};
+const FUND_SEED_BUFFER=1.2;     // seed = cost of one unit of every leg, plus headroom
+let fundSeedCoins=0,fundSeedMinted=0,fundIntendedVol=0,fundFilledVol=0,fundTaxPaid=0;
+function makeFundAgent(idx){
+  // shaped for getQty/addQty: they switch on these exact fields. Negative
+  // id cannot collide with a real agent, and marketBuy/sellIntoBestBid only
+  // ever look the COUNTERPARTY up in byId, never the caller -- so a fund
+  // never needs registering as an agent.
+  return {id:-9000-idx,coins:0,stone:0,glass:0,oil:0,iron:0,gold:0,sand:0,
+          food:[0,0,0,0],isFund:true};
+}
+function fundIsLive(key){
+  if(!FUND_LIVE[key])return false;
+  const legs=FUND_DEFS[key].legs();
+  return legs.length>0&&legs.every(l=>l.cat==='commodity');
+}
+function initFunds(){
+  funds={};fundPriceHist={};
+  for(const k of FUND_KEYS){
+    funds[k]={legs:[],units:{},born:false,bornTick:0,lastReb:0,lastFee:0,
+              base:FUND_START_VALUE,agent:null,intended:{},filled:{}};
+    fundPriceHist[k]=[];
+  }
+}
+initFunds();
+fundSeedCoins=0;fundSeedMinted=0;fundIntendedVol=0;fundFilledVol=0;fundTaxPaid=0;
+/* legs carry their category because sector and commodity share key names
+   ('glass' and 'oil' exist as both) and mean completely different things:
+   coins per unit vs mean net worth per member. A bare string would be
+   ambiguous. */
+function legKey(leg){return leg.cat+':'+leg.key;}
+function legPrice(leg){
+  if(leg.cat==='sector')return sectorPrice(leg.key)||0;
+  return (discoveredCoinPrice&&discoveredCoinPrice[leg.key])||0;
+}
+function legLabel(leg){
+  if(leg.cat==='cash')return 'Uninvested cash';
+  return leg.cat==='sector'?(SECTOR_NAMES[leg.key]||leg.key):(leg.key.charAt(0).toUpperCase()+leg.key.slice(1));
+}
+/* nearest sample at-or-before (tick-ago). priceHist entries are {t,p} and
+   PRICE_SAMPLE_EVERY doubles as a run lengthens, so resolution degrades
+   over time -- immaterial against a 5,000-tick lookback, but it is why
+   this searches by timestamp rather than counting back N entries. */
+function priceAgo(key,ago){
+  const h=priceHist[key];
+  if(!h||!h.length)return 0;
+  const target=tick-ago;
+  if(h[0].t>target)return 0;          // history doesn't reach back that far yet
+  let lo=0,hi=h.length-1;
+  while(lo<hi){const mid=(lo+hi+1)>>1;if(h[mid].t<=target)lo=mid;else hi=mid-1;}
+  return h[lo].p;
+}
+function pickTopGrowth(n){
+  const scored=[];
+  for(const k of MARKET_ITEMS){
+    const now=(discoveredCoinPrice&&discoveredCoinPrice[k])||0;
+    const then=priceAgo(k,FUND_GROWTH_LOOKBACK);
+    if(now>0&&then>0)scored.push({k,g:now/then});
+  }
+  scored.sort((a,b)=>b.g-a.g);
+  return scored.slice(0,n).map(x=>({cat:'commodity',key:x.k}));
+}
+function pickTopSectors(n){
+  const scored=SECTOR_KEYS.map(k=>({k,p:sectorPrice(k)||0})).filter(x=>x.p>0);
+  scored.sort((a,b)=>b.p-a.p);
+  return scored.slice(0,n).map(x=>({cat:'sector',key:x.k}));
+}
+function fundValue(f){
+  // a live fund's holdings ARE its pseudo-agent's inventory plus its coin
+  // balance -- f.units is only the bookkeeping model used by paper funds
+  if(f.agent){
+    let v=f.agent.coins;
+    for(const leg of f.legs)v+=Math.max(0,getQty(f.agent,leg.key))*legPrice(leg);
+    return v;
+  }
+  let v=0;
+  for(const leg of f.legs){
+    const u=f.units[legKey(leg)]||0;
+    if(u>0)v+=u*legPrice(leg);
+  }
+  return v;
+}
+/* live funds start at whatever the treasury seeded them with, paper funds at
+   FUND_START_VALUE. Dividing by base indexes every fund to 100 at inception
+   so they stay directly comparable on one chart and in one price column. */
+function fundIndex(f){
+  const b=f.base||FUND_START_VALUE;
+  return b>0?fundValue(f)/b*FUND_START_VALUE:0;
+}
+/* Walks the real books. Sells overweight legs into standing bids FIRST to
+   raise coins, then buys underweight legs from standing asks with whatever
+   was raised -- the two do not clear simultaneously, so a live fund can end
+   a rebalance holding uninvested cash it could not deploy. That cash drag is
+   real and is exactly how real funds fail to track their index. */
+function fundRebalanceLive(f,legs){
+  const px={},want={};
+  let v=f.agent.coins;
+  for(const leg of legs){
+    px[leg.key]=legPrice(leg);
+    v+=Math.max(0,getQty(f.agent,leg.key))*px[leg.key];
+  }
+  const active=legs.filter(l=>px[l.key]>0);
+  if(!active.length||v<=0)return;
+  const target=v/active.length;
+  for(const leg of active)want[leg.key]=target/px[leg.key];
+  f.intended={};f.filled={};
+  for(const leg of active){
+    const excess=Math.max(0,getQty(f.agent,leg.key))-want[leg.key];
+    if(excess>0.0001){
+      f.intended[leg.key]=-excess;
+      const r=sellIntoBestBid(f.agent,leg.key,excess);
+      f.filled[leg.key]=-r.take;
+      fundIntendedVol+=excess;fundFilledVol+=r.take;
+    }
+  }
+  for(const leg of active){
+    const short=want[leg.key]-Math.max(0,getQty(f.agent,leg.key));
+    if(short>0.0001){
+      f.intended[leg.key]=short;
+      const before=f.agent.coins;
+      const got=marketBuy(f.agent,leg.key,short);
+      f.filled[leg.key]=got;
+      fundIntendedVol+=short;fundFilledVol+=got;
+      if(got>0)fundTaxPaid+=(before-f.agent.coins)*commodityBaseTaxRate(leg.key)*fedProductionTaxMultiplier();
+    }
+  }
+  f.legs=legs;
+}
+/* set units so every priced leg holds an equal share of `value`. Legs
+   priced at 0 keep whatever units they already had -- that is the total
+   loss rule, and it is also what lets a dead sector's position come back
+   if the sector repopulates. */
+function fundSetEqualValue(f,legs,value){
+  const active=legs.filter(l=>legPrice(l)>0);
+  if(!active.length)return false;
+  const target=value/active.length;
+  const nu={};
+  for(const leg of legs){
+    const k=legKey(leg),px=legPrice(leg);
+    nu[k]=px>0?target/px:(f.units[k]||0);
+  }
+  f.units=nu;f.legs=legs;
+  return true;
+}
+function stepFunds(){
+  for(const key of FUND_KEYS){
+    const def=FUND_DEFS[key],f=funds[key];
+    const live=fundIsLive(key);
+    if(!f.born){
+      if(def.warmup&&tick<def.warmup)continue;
+      const legs=def.legs();
+      if(!legs.length)continue;
+      // launch only once EVERY constituent has a real discovered price --
+      // inception is an economic event, not an arbitrary tick number
+      if(legs.some(l=>legPrice(l)<=0))continue;
+      if(live){
+        /* seed is self-scaling: the cost of one unit of every leg at today's
+           prices, plus headroom. A flat constant would be dead on arrival
+           after heavy coin debasement (one unit of sugar ran ~106 coins at
+           t600k) and absurdly large in a fresh run where everything is
+           ~0.01. Granted from the treasury so the coins are not conjured;
+           minted only if the treasury genuinely cannot cover it. */
+        const need=legs.reduce((sum,l)=>sum+legPrice(l),0)*FUND_SEED_BUFFER;
+        if(need<=0)continue;
+        let grant=Math.min(need,stateCoins);
+        if(grant<need){const short=need-grant;fundSeedMinted+=short;grant=need;}
+        else stateCoins-=grant;
+        f.agent=makeFundAgent(FUND_KEYS.indexOf(key));
+        f.agent.coins=grant;fundSeedCoins+=grant;
+        f.legs=legs;
+        fundRebalanceLive(f,legs);          // spend the seed into the basket
+        const v0=fundValue(f);
+        if(v0<=0){f.agent=null;continue;}   // book was too thin to build anything
+        f.base=v0;
+      }else{
+        if(!fundSetEqualValue(f,legs,FUND_START_VALUE))continue;
+        f.base=FUND_START_VALUE;
+      }
+      f.born=true;f.bornTick=tick;f.lastReb=tick;f.lastFee=tick;
+      continue;
+    }
+    if(def.rebalance&&tick-f.lastReb>=def.rebalance){
+      const legs=def.dynamic?def.legs():f.legs;
+      if(legs.length){
+        if(live){fundRebalanceLive(f,legs);fundRebalances++;}
+        else{
+          const v=fundValue(f);
+          if(v>0){fundSetEqualValue(f,legs,v);fundRebalances++;}
+        }
+      }
+      f.lastReb=tick;
+      // fee is charged on the rebalance that crosses the interval, so it
+      // lands every 5th rebalance for the 2k funds and every 2nd for topSec
+      if(def.fee&&tick-f.lastFee>=FUND_FEE_EVERY){
+        if(live){
+          // same 0.5% haircut, applied to real holdings and cash. Vanishes,
+          // matching the paper funds -- note this DOES destroy real units and
+          // real coins now, so it is a genuine supply sink, tiny but real.
+          for(const leg of f.legs){const q=getQty(f.agent,leg.key);if(q>0)addQty(f.agent,leg.key,-q*FUND_MGMT_FEE);}
+          f.agent.coins*=(1-FUND_MGMT_FEE);
+        }else{
+          for(const k in f.units)f.units[k]*=(1-FUND_MGMT_FEE);
+        }
+        f.lastFee=tick;fundFeesCharged++;
+      }
+    }
+  }
+}
+function fundPrice(key){
+  const f=funds[key];
+  return f&&f.born?fundIndex(f):0;
+}
+function fundWeights(key){
+  const f=funds[key];if(!f||!f.born)return [];
+  const v=fundValue(f);if(v<=0)return [];
+  const out=f.legs.map(leg=>{
+    const u=f.agent?Math.max(0,getQty(f.agent,leg.key)):(f.units[legKey(leg)]||0);
+    return {leg,w:(u*legPrice(leg))/v};
+  });
+  if(f.agent&&f.agent.coins>0)out.push({leg:{cat:'cash',key:'cash'},w:f.agent.coins/v});
+  return out.sort((a,b)=>b.w-a.w);
+}
+/* --- fund trading (mirrors buySectorShares/sellSectorShares) --- */
+function buyFundShares(key,capitalAmount){
+  capitalAmount=Math.min(capitalAmount,spectatorCapital);
+  if(capitalAmount<=0)return {bought:0,error:'insufficient spectator capital'};
+  const price=fundPrice(key);
+  if(price<=0)return {bought:0,error:'this fund has not launched yet — some constituent still has no discovered price'};
+  if(!(fundShares[key]>SHARE_EPS))fundEntryTick[key]=tick;
+  const bought=capitalAmount/price;
+  fundShares[key]=(fundShares[key]||0)+bought;
+  fundCostBasis[key]=(fundCostBasis[key]||0)+capitalAmount;
+  spectatorCapital-=capitalAmount;
+  return {bought,error:null};
+}
+function sellFundShares(key,shareCount){
+  const held=fundShares[key]||0;
+  shareCount=Math.min(shareCount,held);
+  if(shareCount<=SHARE_EPS)return {proceeds:0,error:'no shares held'};
+  const price=fundPrice(key);
+  const proceeds=shareCount*price;
+  fundShares[key]=held-shareCount;
+  const basisPortion=(fundCostBasis[key]||0)*(shareCount/held);
+  fundCostBasis[key]=Math.max(0,(fundCostBasis[key]||0)-basisPortion);
+  spectatorCapital+=proceeds;
+  return {proceeds,error:null};
+}
+function fundBuyPrompt(key){
+  if(spectatorTradingBlocked())return;
+  const name=FUND_NAMES[key];
+  const amt=parseFloat(prompt('Invest how much in '+name+'? (you have '+spectatorCapital.toFixed(2)+')','100'));
+  if(!amt||amt<=0)return;
+  const r=buyFundShares(key,amt);
+  if(r.error)alert(r.error);
+  else{
+    // mark the equity curve like commodity trades do, so fund entries are
+    // visible on the graph rather than only showing up at the next sample
+    equityCurve.push({tick,value:totalPortfolioValue(),label:'buy '+name});
+    note('t'+tick+': <em>You invested '+amt.toFixed(2)+' in '+name+'</em>, receiving '+fmtShares(r.bought)+' shares.');
+  }
+}
+function fundSellPrompt(key){
+  if(spectatorTradingBlocked())return;
+  const name=FUND_NAMES[key];
+  const held=fundShares[key]||0;
+  if(held<=SHARE_EPS)return;
+  // full precision in the prompt: toFixed(3) would offer "0.000" for a
+  // position of 1.7e-12 and the sale would silently do nothing
+  const n=parseFloat(prompt('Sell how many '+name+' shares? (you hold '+fmtShares(held)+', worth '+(held*fundPrice(key)).toFixed(2)+')',String(held)));
+  if(!n||n<=0)return;
+  // capture basis/entry BEFORE the sale mutates them, same as the sector
+  // and biome sell paths do
+  const sellAmt=Math.min(n,held);
+  const price=fundPrice(key);
+  const basisPortion=(fundCostBasis[key]||0)*(sellAmt/held);
+  const entryTick=fundEntryTick[key]||tick;
+  const r=sellFundShares(key,n);
+  if(r.error){alert(r.error);return;}
+  // log into the same tradeHistory/tradeStats the History tab reads, so
+  // fund trades show up in win rate, total P&L and best trade like any other
+  const closedTrade={
+    id:++tradeIdCounter, item:name, units:sellAmt,
+    entryPrice:sellAmt>0?basisPortion/sellAmt:0, entryTick,
+    exitPrice:price, exitTick:tick,
+    pnl:r.proceeds-basisPortion
+  };
+  tradeHistory.push(closedTrade);
+  if(tradeHistory.length>2500)tradeHistory.splice(0,tradeHistory.length-2000);
+  tradeStats.count++;
+  if(closedTrade.pnl>0)tradeStats.wins++;
+  tradeStats.totalPnl+=closedTrade.pnl;
+  tradeStats.totalHold+=(closedTrade.exitTick-closedTrade.entryTick);
+  if(!tradeStats.best||closedTrade.pnl>tradeStats.best.pnl)tradeStats.best=closedTrade;
+  if((fundShares[key]||0)<=SHARE_EPS)delete fundEntryTick[key];
+  equityCurve.push({tick,value:totalPortfolioValue(),label:'sell '+name});
+  note('t'+tick+': <em>You sold '+fmtShares(sellAmt)+' '+name+' shares</em> for '+r.proceeds.toFixed(2)+'.');
+}
+function toggleFundExpand(k){expandedFund=expandedFund===k?null:k;}
+
 function buySectorShares(sectorKey,capitalAmount){
   capitalAmount=Math.min(capitalAmount,spectatorCapital);
   if(capitalAmount<=0)return {bought:0,error:'insufficient spectator capital'};
@@ -1894,28 +2385,184 @@ let commodityShares={},commodityCostBasis={};
 function commodityIndexPrice(item){
   return discoveredCoinPrice[item]||0;
 }
+/* --- YOUR COMMODITY ORDERS EXECUTE ON THE REAL BOOK -------------------
+   Previously these were synthetic: shares minted at discoveredCoinPrice
+   with no counterparty, so buying could never fail and never moved a price.
+   Now a market BUY walks the ask book cheapest-first and stops when your
+   budget is exhausted or the book runs dry; a market SELL walks the bid
+   book highest-first. Partial fills are normal and are reported honestly
+   rather than silently rounded up.
+
+   Two consequences worth being aware of:
+
+   1. You are competing with agents. Buying lettuce during a shortage takes
+      food out of the population's hands at prices they were bidding at.
+   2. Your capital is EXOGENOUS -- spectatorCapital lives outside the coin
+      economy. So your buys inject coins into circulation from nowhere and
+      your sells drain them. At small size that is noise; at large size you
+      are a monetary actor the Fed cannot see, since the pseudo-agent is not
+      in `agents` and its balance is zeroed between orders.
+
+   The pseudo-agent is a pure conduit: it is funded immediately before an
+   order, drained immediately after, and holdings are parked in
+   commodityShares so the rest of the dashboard keeps working unchanged. */
+let spectatorAgent=null;
+function specAgent(){
+  if(!spectatorAgent){
+    spectatorAgent=makeFundAgent(500);   // id -9500, cannot collide
+    /* Registered in byId, but deliberately NOT pushed into `agents`. Both
+       are required: the sweep drops any ask or bid whose owner is absent
+       from byId, and sellIntoBestBid/marketBuy skip counterparties they
+       cannot look up -- so an unregistered conduit could never hold a
+       resting order. Staying out of `agents` keeps it from ageing, eating,
+       reproducing or dying. Nothing in the file iterates byId (only .get),
+       so a non-agent living there is safe. */
+    byId.set(spectatorAgent.id,spectatorAgent);
+  }
+  return spectatorAgent;
+}
+/* --- RESTING ORDERS ---------------------------------------------------
+   An order that cannot fill immediately rests on the real book and waits.
+   Expiry is free: the existing sweep already pulls anything older than
+   MARKET_ORDER_TTL (4,000 ticks) and refunds unfilled bid escrow to the
+   owner's coins, which the conduit now receives because it is in byId.
+
+   These push order objects directly rather than calling postBid, because
+   postBid applies bidMult() fill-rate learning and would silently rewrite
+   your chosen limit price. It also merges one bid per item per owner; you
+   may legitimately want several. */
+let spectatorOrders=[],spectatorOrderSeq=0;
+function placeSpectatorBid(item,qty,price){
+  if(qty<=0||price<=0)return null;
+  const escrow=qty*price;
+  if(escrow>spectatorCapital+1e-9)return null;
+  const c=specAgent();
+  spectatorCapital-=escrow;
+  const oid=++spectatorOrderSeq;
+  bids[item].push({id:c.id,qty,price,tick,escrow,specOid:oid});
+  spectatorOrders.push({oid,side:'buy',item,price,qty0:qty,tick,filled:0});
+  return oid;
+}
+function placeSpectatorAsk(item,qty,price){
+  const held=commodityShares[item]||0;
+  qty=Math.min(qty,held);
+  if(qty<=0||price<=0)return null;
+  const c=specAgent();
+  /* asks do not escrow inventory in this model, and marketBuy verifies the
+     seller physically holds the goods at execution time -- so the units
+     must sit on the conduit for the whole life of the ask, not in
+     commodityShares. sweepSpectatorOrders is careful never to reclaim
+     inventory that is backing an open ask. */
+  commodityShares[item]=held-qty;
+  addQty(c,item,qty);
+  const oid=++spectatorOrderSeq;
+  market[item].push({id:c.id,qty,price,tick,specOid:oid});
+  spectatorOrders.push({oid,side:'sell',item,price,qty0:qty,tick,filled:0});
+  return oid;
+}
+function cancelSpectatorOrder(oid){
+  const so=spectatorOrders.find(x=>x.oid===oid);
+  if(!so)return false;
+  const book=so.side==='buy'?bids[so.item]:market[so.item];
+  const i=book.findIndex(o=>o.specOid===oid);
+  if(i>=0){
+    if(so.side==='buy')spectatorCapital+=(book[i].escrow||0);   // unfilled escrow back
+    book.splice(i,1);                                           // sell: units reclaimed on next sweep
+  }
+  spectatorOrders=spectatorOrders.filter(x=>x.oid!==oid);
+  note(`t${tick}: <em>You cancelled your ${so.side} order</em> on ${so.item}.`);
+  updateTradingDashboard();
+  return true;
+}
+function cancelAllSpectatorOrders(){
+  for(const o of spectatorOrders.slice())cancelSpectatorOrder(o.oid);
+}
+/* Runs every tick. Fills against a resting order arrive asynchronously --
+   an agent selling into your bid calls addQty on the conduit, and an agent
+   buying your ask credits its coins -- so this is what moves them into
+   your visible position and capital. */
+function sweepSpectatorOrders(){
+  const c=spectatorAgent;
+  if(!c)return;
+  for(const item of MARKET_ITEMS){
+    let backing=0;
+    for(const o of market[item])if(o.id===c.id)backing+=o.qty;
+    const free=Math.max(0,getQty(c,item))-backing;
+    if(free>0.0001){
+      commodityShares[item]=(commodityShares[item]||0)+free;
+      addQty(c,item,-free);
+    }
+  }
+  // sale proceeds and expiry refunds both land here
+  if(c.coins>0.0001){spectatorCapital+=c.coins;c.coins=0;}
+  const alive=[];
+  for(const so of spectatorOrders){
+    const book=so.side==='buy'?bids[so.item]:market[so.item];
+    const ord=book.find(o=>o.specOid===so.oid);
+    const remaining=ord?ord.qty:0;
+    const newFill=(so.qty0-remaining)-so.filled;
+    if(newFill>0.0001){
+      if(so.side==='buy'){
+        commodityCostBasis[so.item]=(commodityCostBasis[so.item]||0)+newFill*so.price;
+      }else{
+        // proceeds already swept; retire basis proportionally. Approximate,
+        // because average-cost basis cannot know which units these were.
+        const heldNow=(commodityShares[so.item]||0)+remaining;
+        const basis=commodityCostBasis[so.item]||0;
+        const denom=heldNow+newFill;
+        if(denom>0)commodityCostBasis[so.item]=Math.max(0,basis-basis*(newFill/denom));
+      }
+      so.filled=so.qty0-remaining;
+    }
+    if(ord)alive.push(so);
+    else if(so.filled<so.qty0-0.0001){
+      note(`t${tick}: <em>Your ${so.side} order on ${so.item} expired</em> — ${so.filled.toFixed(3)} of ${so.qty0.toFixed(3)} filled.`);
+    }
+  }
+  spectatorOrders=alive;
+}
 function buyCommodityShares(item,capitalAmount){
   capitalAmount=Math.min(capitalAmount,spectatorCapital);
-  if(capitalAmount<=0)return {bought:0,error:'insufficient spectator capital'};
-  const price=commodityIndexPrice(item);
-  if(price<=0)return {bought:0,error:'no discovered price for this commodity yet'};
-  const shares=capitalAmount/price;
-  commodityShares[item]=(commodityShares[item]||0)+shares;
-  commodityCostBasis[item]=(commodityCostBasis[item]||0)+capitalAmount;
-  spectatorCapital-=capitalAmount;
-  return {bought:shares,error:null};
+  if(capitalAmount<=0)return {bought:0,spent:0,vwap:0,error:'insufficient spectator capital'};
+  if(!market[item]||!market[item].length)
+    return {bought:0,spent:0,vwap:0,error:'no asks on the book for '+item+' right now — nothing to buy at market'};
+  const a=specAgent();
+  a.coins=capitalAmount;
+  const before=a.coins;
+  // qtyNeeded unbounded: the budget itself is the limit, because marketBuy's
+  // own affordability check (floor(coins/price)) shrinks as coins deplete.
+  // The loop is bounded by the book length regardless.
+  const bought=marketBuy(a,item,Infinity);
+  const spent=before-a.coins;
+  a.coins=0;
+  if(bought<=0){
+    return {bought:0,spent:0,vwap:0,error:'nothing on the book was reachable with '+capitalAmount.toFixed(2)+' — cheapest ask costs more than that per unit'};
+  }
+  addQty(a,item,-bought);   // park it in commodityShares, keep the conduit empty
+  commodityShares[item]=(commodityShares[item]||0)+bought;
+  commodityCostBasis[item]=(commodityCostBasis[item]||0)+spent;
+  spectatorCapital-=spent;
+  return {bought,spent,vwap:spent/bought,error:null};
 }
 function sellCommodityShares(item,shareCount){
   const held=commodityShares[item]||0;
   shareCount=Math.min(shareCount,held);
-  if(shareCount<=0)return {proceeds:0,error:'no shares held'};
-  const price=commodityIndexPrice(item);
-  const proceeds=shareCount*price;
-  commodityShares[item]=held-shareCount;
-  const basisPortion=(commodityCostBasis[item]||0)*(shareCount/held);
+  if(shareCount<=0)return {proceeds:0,sold:0,vwap:0,error:'no units held'};
+  if(!bids[item]||!bids[item].length)
+    return {proceeds:0,sold:0,vwap:0,error:'no bids on the book for '+item+' right now — nobody to sell to at market'};
+  const a=specAgent();
+  a.coins=0;
+  addQty(a,item,shareCount);
+  const r=sellIntoBestBid(a,item,shareCount);
+  const sold=r.take,proceeds=r.cost;
+  addQty(a,item,-(shareCount-sold));   // hand the unsold remainder back
+  a.coins=0;
+  if(sold<=0)return {proceeds:0,sold:0,vwap:0,error:'no reachable bid'};
+  commodityShares[item]=held-sold;
+  const basisPortion=(commodityCostBasis[item]||0)*(sold/held);
   commodityCostBasis[item]=Math.max(0,(commodityCostBasis[item]||0)-basisPortion);
   spectatorCapital+=proceeds;
-  return {proceeds,error:null};
+  return {proceeds,sold,vwap:proceeds/sold,error:null};
 }
 /* --- TRADING DASHBOARD ---
    Replaces the thin commodity browser with a full trading experience:
@@ -1951,6 +2598,13 @@ function totalPortfolioValue(){
     const s=sectorShares[k]||0;
     if(s>0)v+=s*sectorPrice(k);
   }
+  /* funds count too -- without this a fund purchase debits spectatorCapital
+     and the shares valued at nothing, so the hero P&L and the equity curve
+     both booked an instant loss equal to the amount invested. */
+  for(const k of FUND_KEYS){
+    const s=fundShares[k]||0;
+    if(s>0)v+=s*fundPrice(k);
+  }
   return v;
 }
 
@@ -1965,16 +2619,34 @@ function commodityBuyPrompt(item){
   if(spectatorTradingBlocked())return;
   const amt=parseFloat(prompt(`Buy how much ${item} exposure? (you have ${spectatorCapital.toFixed(2)})`,'100'));
   if(!amt||amt<=0)return;
-  const price=commodityIndexPrice(item);
   const r=buyCommodityShares(item,amt);
-  if(r.error){alert(r.error);return;}
-  // record entry for trade tracking
+  if(r.error){
+    // nothing on the book — rest the whole order instead of refusing
+    const refp=commodityIndexPrice(item);
+    if(refp>0&&amt<=spectatorCapital+1e-9&&confirm(r.error+'\n\nRest a buy order at '+refp.toFixed(3)+'/unit instead? It waits up to '+MARKET_ORDER_TTL.toLocaleString()+' ticks and can be cancelled from the Positions tab.')){
+      const oid=placeSpectatorBid(item,amt/refp,refp);
+      if(oid){
+        note(`t${tick}: <em>Resting buy order on ${item}</em> — ${(amt/refp).toFixed(3)} units at ${refp.toFixed(3)}, ${amt.toFixed(2)} escrowed.`);
+        updateTradingDashboard();
+      }
+    }else alert(r.error);
+    return;
+  }
+  // entry price is the VWAP actually paid walking the book, not the index
+  // price -- they diverge whenever the order eats more than the best ask
   const tid=++tradeIdCounter;
   if(!window._openTrades)window._openTrades={};
   if(!window._openTrades[item])window._openTrades[item]=[];
-  window._openTrades[item].push({id:tid,units:r.bought,entryPrice:price,entryTick:tick,cost:amt});
+  window._openTrades[item].push({id:tid,units:r.bought,entryPrice:r.vwap,entryTick:tick,cost:r.spent});
   equityCurve.push({tick,value:totalPortfolioValue(),label:'buy '+item});
-  note(`t${tick}: <em>You bought ${r.bought.toFixed(3)} units of ${item}</em> for ${amt.toFixed(2)}`);
+  let slip=r.spent<amt-0.005?` — partial fill, only ${r.spent.toFixed(2)} of ${amt.toFixed(2)} deployed (book ran dry)`:'';
+  // rest whatever the book could not absorb
+  const leftover=amt-r.spent;
+  if(leftover>0.005&&r.vwap>0){
+    const oid=placeSpectatorBid(item,leftover/r.vwap,r.vwap);
+    if(oid)slip+=`; ${leftover.toFixed(2)} left resting as a bid at ${r.vwap.toFixed(3)}`;
+  }
+  note(`t${tick}: <em>You bought ${r.bought.toFixed(3)} units of ${item}</em> for ${r.spent.toFixed(2)} at ${r.vwap.toFixed(3)}/unit${slip}`);
   updateTradingDashboard();
 }
 function commoditySellPrompt(item){
@@ -1983,12 +2655,24 @@ function commoditySellPrompt(item){
   if(held<=0)return;
   const amt=parseFloat(prompt(`Sell how many units of ${item}? (you hold ${held.toFixed(3)})`,held.toFixed(3)));
   if(!amt||amt<=0)return;
-  const price=commodityIndexPrice(item);
   const r=sellCommodityShares(item,amt);
-  if(r.error){alert(r.error);return;}
-  // close open trades FIFO
+  if(r.error){
+    const refp=commodityIndexPrice(item);
+    if(refp>0&&confirm(r.error+'\n\nRest a sell order at '+refp.toFixed(3)+'/unit instead? It waits up to '+MARKET_ORDER_TTL.toLocaleString()+' ticks and can be cancelled from the Positions tab.')){
+      const oid=placeSpectatorAsk(item,amt,refp);
+      if(oid){
+        note(`t${tick}: <em>Resting sell order on ${item}</em> — ${amt.toFixed(3)} units at ${refp.toFixed(3)}.`);
+        updateTradingDashboard();
+      }
+    }else alert(r.error);
+    return;
+  }
+  // exit price is the VWAP realised walking the bids, and FIFO closes only
+  // what ACTUALLY filled — closing the requested amount would book phantom
+  // exits whenever the bid book was too thin to absorb the whole order
+  const price=r.vwap;
   const open=(window._openTrades&&window._openTrades[item])||[];
-  let remaining=amt;
+  let remaining=r.sold;
   while(remaining>0.0001&&open.length){
     const t=open[0];
     const closeQty=Math.min(remaining,t.units);
@@ -2012,7 +2696,13 @@ function commoditySellPrompt(item){
     if(t.units<0.0001)open.shift();
   }
   equityCurve.push({tick,value:totalPortfolioValue(),label:'sell '+item});
-  note(`t${tick}: <em>You sold ${amt.toFixed(3)} units of ${item}</em> for ${r.proceeds.toFixed(2)}`);
+  let slipS=r.sold<amt-0.0005?` — partial fill, ${r.sold.toFixed(3)} of ${amt.toFixed(3)} sold (bids ran dry)`:'';
+  const leftS=amt-r.sold;
+  if(leftS>0.0005&&r.vwap>0){
+    const oid=placeSpectatorAsk(item,leftS,r.vwap);
+    if(oid)slipS+=`; ${leftS.toFixed(3)} left resting as an ask at ${r.vwap.toFixed(3)}`;
+  }
+  note(`t${tick}: <em>You sold ${r.sold.toFixed(3)} units of ${item}</em> for ${r.proceeds.toFixed(2)} at ${r.vwap.toFixed(3)}/unit${slipS}`);
   updateTradingDashboard();
 }
 
@@ -2109,6 +2799,24 @@ function drawEquityChart(){
 Object.defineProperty(Number.prototype,'grp',{value:function(dp){
   return this.toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp});
 },writable:true,configurable:true});
+/* Fund indices legitimately span ~15 orders of magnitude (Growth 3 near 50,
+   High Risk past 1e16), so a cent buys a share count like 1.7e-12. Fixed
+   decimal formatting prints that as "0.000" and a fixed 0.0001 display
+   threshold hides the position entirely -- the money is still counted in
+   totalPortfolioValue, but with no Sell button it looks like it vanished.
+   No single split ratio fixes this; the magnitude range is the problem, so
+   the formatter adapts instead. */
+/* Not a share-count threshold: with indices spanning 1e2 to 1e16, ANY fixed
+   share cutoff hides a real position on some fund. A cent in High Risk is
+   2.7e-19 shares. If you hold a positive number of shares, you hold a
+   position -- selling the full amount yields exactly 0, so there is no dust
+   to filter. */
+const SHARE_EPS=0;
+function fmtShares(n){
+  if(!isFinite(n)||n<=0)return '0';
+  if(n<0.001||n>=1e12)return n.toExponential(3);
+  return n.grp(3);
+}
 function updateTradingDashboard(){
   if(uiInteracting)return;
   const total=totalPortfolioValue();
@@ -2237,12 +2945,61 @@ function updateTradingDashboard(){
       }
     }
 
+
+    // --- FUNDS COLUMN ---
+    let fundHtml='';
+    for(const k of FUND_KEYS){
+      const f=funds[k],price=fundPrice(k),held=fundShares[k]||0,isExp=expandedFund===k;
+      const hasPosn=held>SHARE_EPS;
+      const pct=price>0?((price/FUND_START_VALUE-1)*100):0;
+      fundHtml+=`<div class="comm-row" onclick="toggleFundExpand('${k}')">`;
+      fundHtml+=`<div class="comm-dot" style="background:${FUND_COLOR[k]}"></div>`;
+      fundHtml+=`<span class="comm-name" style="width:92px">${FUND_NAMES[k]}</span>`;
+      fundHtml+=`<span class="comm-price">${price>0?price.grp(2):'—'}</span>`;
+      /* This shows YOUR position P&L against cost basis -- not the fund's
+         move since inception. Those are different numbers and showing the
+         latter next to a Sell button read as a loss whenever the fund sat
+         below 100, even when the holder was up. Since-inception lives in
+         the expanded row and on the funds card, where it belongs. */
+      if(hasPosn){
+        const _val=held*price,_basis=fundCostBasis[k]||0,_pl=_val-_basis;
+        const _plPct=_basis>0?(_pl/_basis)*100:0;
+        fundHtml+=`<span class="comm-signal" style="color:${_pl>=0?'var(--life)':'var(--danger)'}">${(_pl>=0?'+':'')+_plPct.toFixed(1)+'%'}</span>`;
+      }
+      if(price>0)fundHtml+=`<button onclick="event.stopPropagation();fundBuyPrompt('${k}')" style="font-size:10px;padding:2px 6px;">Buy</button>`;
+      if(hasPosn){
+        const val=held*price, basis=fundCostBasis[k]||0, pl=val-basis;
+        fundHtml+=`<button onclick="event.stopPropagation();fundSellPrompt('${k}')" style="font-size:10px;padding:2px 6px;margin-left:2px;border-color:${pl>=0?'var(--life)':'var(--danger)'}">Sell</button>`;
+      }
+      fundHtml+=`</div>`;
+      if(isExp){
+        fundHtml+=`<div class="comm-expand">`;
+        fundHtml+=`<div style="font-size:11px;color:var(--dim);line-height:1.4;margin-bottom:6px">${FUND_DESC[k]||''}</div>`;
+        if(!f.born){
+          fundHtml+=`<div class="statrow"><span>Status</span><b>awaiting inception</b></div>`;
+        }else{
+          fundHtml+=`<div class="statrow"><span>Inception</span><b>t${f.bornTick}</b></div>`;
+          fundHtml+=`<div class="statrow"><span>Fund since inception</span><b style="color:${pct>=0?'var(--life)':'var(--danger)'}">${(pct>=0?'+':'')+pct.toFixed(1)}%</b></div>`;
+          const w=fundWeights(k);
+          for(const x of w){
+            const dead=legPrice(x.leg)<=0;
+            fundHtml+=`<div class="statrow"><span${dead?' style="color:var(--danger)"':''}>${legLabel(x.leg)}${dead?' (zeroed)':''}</span><b>${(x.w*100).toFixed(1)}%</b></div>`;
+          }
+          if(hasPosn){
+            const val=held*price, basis=fundCostBasis[k]||0, pl=val-basis;
+            fundHtml+=`<div class="statrow"><span>Your Position</span><b>${fmtShares(held)} shares · worth ${val.grp(2)} · <span style="color:${pl>=0?'var(--life)':'var(--danger)'}">${pl>=0?'+':''}${pl.grp(2)}</span></b></div>`;
+          }
+        }
+        fundHtml+=`</div>`;
+      }
+    }
+
     const subTabBtn=(key,label)=>`<button class="${activeMarketSubTab===key?'active':''}" onclick="switchMarketSubTab('${key}')">${label}</button>`;
     el.tradeTabMarket.innerHTML=
       `<div class="trade-tabs" style="margin-bottom:6px;">`+
-        subTabBtn('commodities','commodities')+subTabBtn('sectors','sectors')+subTabBtn('biomes','biomes')+
+        subTabBtn('commodities','commodities')+subTabBtn('sectors','sectors')+subTabBtn('biomes','biomes')+subTabBtn('funds','funds')+
       `</div>`+
-      (activeMarketSubTab==='commodities'?commHtml:activeMarketSubTab==='sectors'?sectorHtml:biomeHtml);
+      (activeMarketSubTab==='commodities'?commHtml:activeMarketSubTab==='sectors'?sectorHtml:activeMarketSubTab==='funds'?fundHtml:biomeHtml);
   }
 
   // --- POSITIONS TAB ---
@@ -2295,6 +3052,30 @@ function updateTradingDashboard(){
       html+=`<div style="margin-top:4px"><button onclick="sectorSellPrompt('${k}')" style="font-size:10px;padding:2px 8px;">Sell</button></div>`;
       html+=`</div>`;
     }
+    for(const k of FUND_KEYS){
+      const held=fundShares[k]||0;
+      if(held<=SHARE_EPS)continue;
+      hasPos=true;
+      const price=fundPrice(k);
+      const val=held*price, basis=fundCostBasis[k]||0, pl=val-basis;
+      const plPct=basis>0?((pl/basis)*100).grp(1):'0.0';
+      const entryTk=fundEntryTick[k]||0;
+      const entryPx=held>0?basis/held:0;
+      html+=`<div class="trade-log-entry">`;
+      html+=`<div style="display:flex;justify-content:space-between;align-items:baseline">`;
+      html+=`<span style="font-weight:600">${FUND_NAMES[k]} <span style="font-size:9px;color:var(--dim);font-weight:400;">fund</span></span>`;
+      html+=`<span style="font-weight:600;color:${pl>=0?'var(--life)':'var(--danger)'}">${pl>=0?'+':''}${pl.grp(2)} (${plPct}%)</span>`;
+      html+=`</div>`;
+      html+=`<div class="tags">`;
+      html+=`<span class="tag">${fmtShares(held)} shares</span>`;
+      if(entryPx)html+=`<span class="tag">entry ${entryPx.grp(2)}</span>`;
+      html+=`<span class="tag">now ${price.grp(2)}</span>`;
+      html+=`<span class="tag">val ${val.grp(2)}</span>`;
+      if(entryTk)html+=`<span class="tag">${(tick-entryTk).toLocaleString()} ticks held</span>`;
+      html+=`</div>`;
+      html+=`<div style="margin-top:4px"><button onclick="fundSellPrompt('${k}')" style="font-size:10px;padding:2px 8px;">Sell</button></div>`;
+      html+=`</div>`;
+    }
     for(let bi=0;bi<3;bi++){
       const held=economyShares[bi]||0;
       if(held<0.0001)continue;
@@ -2313,6 +3094,27 @@ function updateTradingDashboard(){
       html+=`<span class="tag">val ${val.grp(2)}</span>`;
       html+=`</div>`;
       html+=`<div style="margin-top:4px"><button onclick="economySellPrompt(${bi})" style="font-size:10px;padding:2px 8px;">Sell</button></div>`;
+      html+=`</div>`;
+    }
+    if(spectatorOrders.length){
+      hasPos=true;
+      html+=`<div class="trade-log-entry" style="border-color:var(--trade)">`;
+      html+=`<div style="display:flex;justify-content:space-between;align-items:baseline">`;
+      html+=`<span style="font-weight:600">Open Orders <span style="font-size:9px;color:var(--dim);font-weight:400;">resting on the book</span></span>`;
+      html+=`<button onclick="cancelAllSpectatorOrders()" style="font-size:10px;padding:2px 8px;">Cancel All</button></div>`;
+      for(const so of spectatorOrders){
+        const book=so.side==='buy'?bids[so.item]:market[so.item];
+        const ord=book.find(o=>o.specOid===so.oid);
+        const remaining=ord?ord.qty:0;
+        const age=tick-so.tick, left=Math.max(0,MARKET_ORDER_TTL-age);
+        html+=`<div class="tags" style="margin-top:4px;align-items:center">`;
+        html+=`<span class="tag" style="color:${so.side==='buy'?'var(--life)':'var(--danger)'}">${so.side.toUpperCase()} ${so.item}</span>`;
+        html+=`<span class="tag">${remaining.grp(3)} left of ${so.qty0.grp(3)}</span>`;
+        html+=`<span class="tag">@ ${so.price.grp(3)}</span>`;
+        html+=`<span class="tag">expires in ${left.toLocaleString()}t</span>`;
+        html+=`<button onclick="cancelSpectatorOrder(${so.oid})" style="font-size:9px;padding:1px 6px;">Cancel</button>`;
+        html+=`</div>`;
+      }
       html+=`</div>`;
     }
     if(!hasPos){
@@ -3414,7 +4216,10 @@ function sellIntoBestBid(a,item,qty){
   }
   // purge drained bids now rather than leaving husks until the next sweep
   // (gold often has NO asks, so matchBidsAsks skips its per-tick cleanup entirely)
-  if(totalTake>0)bids[item]=bidBook.filter(o=>o.qty>0.001);
+  if(totalTake>0){
+    bidFlowThisTick[item]+=totalTake;   // this path bypasses settleBidFill entirely
+    bids[item]=bidBook.filter(o=>o.qty>0.001);
+  }
   return {take:totalTake,cost:totalCost};
 }
 function closePosition(a,item,qty){
@@ -4656,7 +5461,12 @@ function forEachTileInBiomePatch(biome,areaFrac,minTiles,cb){
 function triggerEarthquake(){
   const biome=pickBiome();
   let destroyed=0;
-  forEachTileInBiomePatch(biome,0.02+Math.random()*0.03,4,i=>{   // up to ~5% of the biome
+  /* 2%-10% of the biome. The ceiling is double what it was: the structures
+     that actually matter economically are sparse (9 crushers, 28 oil drills
+     across three biomes), so a patch capped at 5% almost never caught one
+     and quakes read as a housing dent rather than a supply shock. The floor
+     stays at 2% so small tremors are still possible and the range is wide. */
+  forEachTileInBiomePatch(biome,0.02+Math.random()*0.08,4,i=>{
     let hit=false;
     if(house[i]>0){totalHousingCapacity-=house[i]*SLOTS_PER_FLOOR;house[i]=0;const ri=rentableHouseIndex.indexOf(i);if(ri>=0)rentableHouseIndex.splice(ri,1);hit=true;}
     if(greenhouse[i]>0){greenhouse[i]=0;hit=true;}
@@ -5210,6 +6020,9 @@ function step(){
   }
   agents=agents.filter(a=>a.e>0&&a.age<MAX_AGE);
   matchBidsAsks();
+  rollBidFlow();   // must follow the match, or the tick's fills are discarded uncounted
+  sweepSpectatorOrders();   // collect async fills / refunds on your resting orders
+  stepFunds();     // pure arithmetic on already-computed prices; no book interaction
   if(tick%50===0)for(const a of agents){
     for(const[k,v]of a.ledger){const nv=v*0.9;if(Math.abs(nv)<0.05)a.ledger.delete(k);else a.ledger.set(k,nv);}
     for(const[k,v]of a.gaveToTick){if(tick-v.tick>200)a.gaveToTick.delete(k);}
@@ -5248,6 +6061,11 @@ const hist={pop:[],wGini:[],lGini:[],housed:[],plot:[],rough:[],rate:[],prudence
   xF:[],xS:[],xG:[],floors:[],occup:[],gh:[],
   bD:[],bS:[],bL:[],cS:[],cP:[],cL:[],cR:[],fGini:[],gold:[],coins2:[],charms:[]};
 const HIST_MAX=600;
+/* one rolling buffer per fund. Added after the hist literal rather than
+   inside it because FUND_KEYS drives the list -- the generic
+   `for(const k in hist)` trim and the generic reset both pick these up
+   with no further changes. */
+for(const k of FUND_KEYS)hist['fund_'+k]=[];
 
 /* ---- PER-TICK METRICS ----------------------------------------------
    Split out of the old monolithic recordMetrics(). Everything in here
@@ -5355,12 +6173,12 @@ function tickMetrics(){
     // one computeSectorStats() pass here feeds all 9 charts at once,
     // same reasoning as computeSectorStats existing in the first place
     // (one pass beats nine separate population scans). What actually
-    // gets STORED (and therefore charted/traded) is a 2,000-tick moving
+    // gets STORED (and therefore charted/traded) is a 1,000-tick moving
     // average, not the raw instantaneous figure — raw net-worth-per-
     // capita swings hard tick to tick as agents die/are born/change
     // land, which made both the sector/biome charts and the actual buy/
     // sell price feel erratic. sectorRawRecent/biomeRawRecent hold just
-    // the last 2,000 ticks of RAW samples (pruned each time), purely to
+    // the last 1,000 ticks of RAW samples (pruned each time), purely to
     // compute that average from — sectorPriceHist/biomePriceHist only
     // ever receive the smoothed result.
     const sectorStats=computeSectorStats();
@@ -5379,6 +6197,13 @@ function tickMetrics(){
       while(buf.length&&tick-buf[0].t>SECTOR_MA_WINDOW)buf.shift();
       const ma=buf.length?buf.reduce((s,pt)=>s+pt.p,0)/buf.length:raw;
       biomePriceHist[bi].push({t:tick,p:ma});
+    }
+    // funds are already-smoothed by construction (sector legs read the
+    // 1,000-tick MA), so no second smoothing pass here -- double-smoothing
+    // would make them feel far more sluggish than their constituents
+    for(const k of FUND_KEYS){
+      const fp=fundPrice(k);
+      if(fp>0)fundPriceHist[k].push({t:tick,p:fp});
     }
     /* --- adaptive resolution ---
        A flat sliding window (drop the oldest point once full) would cap
@@ -5417,6 +6242,13 @@ function tickMetrics(){
         if(i<arr.length)merged.push(arr[i]);
         biomePriceHist[bi]=merged;
       }
+      for(const k of FUND_KEYS){
+        const arr=fundPriceHist[k],merged=[];
+        let i=0;
+        for(;i+1<arr.length;i+=2)merged.push({t:arr[i+1].t,p:(arr[i].p+arr[i+1].p)/2});
+        if(i<arr.length)merged.push(arr[i]);
+        fundPriceHist[k]=merged;
+      }
       PRICE_SAMPLE_EVERY*=2;
     }
   }
@@ -5451,6 +6283,11 @@ function paintMetrics(){
   const recipRate=recipTotal?recipHits/recipTotal:0;
   const S=shelterSnap,tot=(S.housed+S.plot+S.rough)||1;
 
+  // all six funds are indexed to 100 at inception, so they share a scale
+  // and can be read against each other on one chart. An unborn fund pushes
+  // its inception value rather than 0 -- a real 0 would drag the shared
+  // axis down and flatten every live line against the top of the chart.
+  for(const k of FUND_KEYS){const fp=fundPrice(k);hist['fund_'+k].push(fp>0?fp:FUND_START_VALUE);}
   hist.pop.push(agents.length);hist.wGini.push(wG);hist.lGini.push(lG);
   hist.housed.push(S.housed/tot);hist.plot.push(S.plot/tot);hist.rough.push(S.rough/tot);
   hist.rate.push(A?SU/A:0);hist.prudence.push(avg('prudence'));
@@ -5506,6 +6343,30 @@ function paintMetrics(){
   el.sMktBidsPosted.textContent=marketBidsPosted;
   el.sPriceSignal.textContent=priceMultStone.toFixed(2)+'/'+priceMultGlass.toFixed(2)+'/'+priceMultOil.toFixed(2)+'/'+priceMultIron.toFixed(2)+'/'+priceMultSand.toFixed(2)+'/'+
     priceMultCrop[0].toFixed(2)+'/'+priceMultCrop[1].toFixed(2)+'/'+priceMultCrop[2].toFixed(2)+'/'+priceMultCrop[3].toFixed(2);
+  {
+    const fb=fundPrice('broad'),fm=fundPrice('broadMgd');
+    const pc=v=>v>0?((v/FUND_START_VALUE-1)*100).toFixed(1)+'%':'\u2014';
+    const e1=document.getElementById('sFundReb');if(e1)e1.textContent=fundRebalances+' / '+fundFeesCharged;
+    const e2=document.getElementById('sFundBroad');if(e2)e2.textContent=pc(fb);
+    const e3=document.getElementById('sFundBroadMgd');if(e3)e3.textContent=pc(fm);
+    const e5=document.getElementById('sFundFill');
+    if(e5){
+      if(fundIntendedVol>0){
+        const fr=fundFilledVol/fundIntendedVol*100;
+        e5.textContent=fr.toFixed(1)+'%  ('+fundFilledVol.grp(0)+' / '+fundIntendedVol.grp(0)+' units)';
+        // a low fill rate IS the liquidity constraint biting -- that is the
+        // whole point of routing through the book, not a malfunction
+        e5.style.color=fr>90?'var(--life)':fr>50?'var(--sugar)':'var(--danger)';
+      }else e5.textContent='\u2014';
+    }
+    const e6=document.getElementById('sFundSeed');
+    if(e6)e6.textContent=fundSeedCoins.grp(2)+' / '+fundSeedMinted.grp(2)+' / '+fundTaxPaid.grp(2);
+    const e4=document.getElementById('sFundSpread');
+    if(e4){
+      if(fb>0&&fm>0){const d=fm-fb;e4.textContent=(d>=0?'+':'')+d.toFixed(2);e4.style.color=d>=0?'var(--life)':'var(--danger)';}
+      else e4.textContent='\u2014';
+    }
+  }
   el.sScarcityPressure.textContent=['stone','glass','oil','iron','sand',...CROP_KEYS].map(k=>scarcityPressure(k).toFixed(2)).join('/');
   /* Rest of default telemetry UI bindings */
   el.sStateTreasury.textContent=stateCoins.toFixed(2) + ' / ' + stateGold.toFixed(2);
@@ -5913,13 +6774,57 @@ let viewMode='life';
 const VIEWS=['life','money','trade','terrain','capital','land'];
 const VIEWLBL={life:'life',money:'money (coins/gold/charms)',trade:'trade heat',terrain:'terrain & crops',capital:'capital',land:'land (owners)'};
 function ownerHue(id){return(id*137.508)%360;}
+/* Ground tint per biome. The bands were only ever a logical division --
+   biomeAt() split the map into thirds but nothing ever painted them, so
+   Desert, Steppe and Lowland rendered identically against the same near
+   black backdrop. Drawn as three band fills before the cell loop rather
+   than a per-cell tint: 3 fillRects a frame instead of W*H, and the crop,
+   sand, structure and agent layers all still composite on top. */
+const BIOME_GROUND=['#94794a',   // Desert  — sunlit tan (was #6b5636: rendered as mud)
+                    '#4e6b3f',   // Steppe  — grassy mid green, faint wheat warmth
+                    '#22402e'];  // Lowland — deep green
+/* Static per-cell noise so the bands read as ground rather than a flat fill.
+   Generated once into an offscreen canvas at load and blitted per frame, so
+   it costs one drawImage instead of W*H fillRects. Deterministic and never
+   regenerated, so it does not shimmer between frames. */
+let groundTex=null;
+function buildGroundTexture(){
+  groundTex=document.createElement('canvas');
+  groundTex.width=cv.width;groundTex.height=cv.height;
+  const g=groundTex.getContext('2d');
+  let seed=1337;
+  const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const v=rnd();
+    if(v<0.55)continue;                       // leave most cells untouched
+    const dark=v<0.78;
+    g.fillStyle=dark?'rgba(0,0,0,0.13)':'rgba(255,255,255,0.055)';
+    g.fillRect(x*CELL,y*CELL,CELL,CELL);
+  }
+}
 function draw(){
   ctx.fillStyle='#080a0d';ctx.fillRect(0,0,cv.width,cv.height);
+  for(let b=0;b<3;b++){
+    const y0=BIOME_Y_RANGE[b][0]*CELL,y1=BIOME_Y_RANGE[b][1]*CELL;
+    ctx.fillStyle=BIOME_GROUND[b];
+    ctx.fillRect(0,y0,cv.width,y1-y0);
+  }
+  if(!groundTex)buildGroundTexture();
+  ctx.drawImage(groundTex,0,0);
+  // soften the hard seam where two bands butt together
+  for(let b=1;b<3;b++){
+    const yb=BIOME_Y_RANGE[b][0]*CELL,band=CELL*3;
+    const grad=ctx.createLinearGradient(0,yb-band,0,yb+band);
+    grad.addColorStop(0,BIOME_GROUND[b-1]);
+    grad.addColorStop(1,BIOME_GROUND[b]);
+    ctx.globalAlpha=0.55;ctx.fillStyle=grad;
+    ctx.fillRect(0,yb-band,cv.width,band*2);ctx.globalAlpha=1;
+  }
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){
     const i=y*W+x,ct=cellType[i];
     let col=null,alpha=1;
     if(ct===T_WATER)col='rgba(63,123,176,0.55)';
-    else if(ct===T_SAND)col=`rgba(107,95,71,${sandLeft[i]>0?0.30:0.12})`;
+    else if(ct===T_SAND)col=`rgba(226,205,152,${sandLeft[i]>0?0.45:0.14})`;   // pale sand: the old 107,95,71 was invisible against desert ground
     else if(viewMode==='land'&&owner[i])col=`hsla(${ownerHue(owner[i])},45%,45%,0.5)`;
     else{const s=sugar[i];if(s>0.12){const t=Math.min(1,s/4);col=CROP_COL[ct];alpha=0.10+t*0.42;}}
     if(col){ctx.globalAlpha=alpha;ctx.fillStyle=col;ctx.fillRect(x*CELL,y*CELL,CELL,CELL);ctx.globalAlpha=1;}
@@ -5940,22 +6845,56 @@ function draw(){
     if(house[i]){const t=Math.min(1,house[i]/5);
       ctx.fillStyle=`rgba(217,160,102,${0.35+t*0.6})`;ctx.fillRect(x*CELL,y*CELL,CELL,CELL);}
   }
+  /* Agents render near-black rather than teal. Teal read fine against the
+     old flat dark ground, but once the biomes were tinted it sat almost on
+     top of the Steppe and Lowland greens -- and those two hold ~88% of the
+     population. Dark reads against tan, mid green and deep green alike, so
+     it is the one colour that works in every band. The per-mode HIGHLIGHT
+     colours are untouched: those still carry the actual information, and
+     they now pop much harder against a dark baseline. */
   for(const a of agents){
     let col;
-    if(viewMode==='money')col=a.coins>0?'#f0c43c':(a.gold>0?'#c89b28':(a.charm?'#e07be0':'rgba(87,199,163,0.3)'));
-    else if(viewMode==='trade')col=a.ledger.size>0?'#e07be0':'rgba(87,199,163,0.4)';
-    else if(viewMode==='land')col=a.landCells>0?'#fff':'rgba(87,199,163,0.5)';
-    else if(viewMode==='capital')col=a.glass>0?'#8fd4e8':(a.stone>0?'#9aa3ab':'rgba(87,199,163,0.35)');
-    else col=foodCount(a)>=3?'#e8b04b':(a.smelting>0?'#c98a5a':'rgba(87,199,163,0.9)');
+    if(viewMode==='money')col=a.coins>0?'#f0c43c':(a.gold>0?'#c89b28':(a.charm?'#e07be0':'rgba(16,19,23,0.62)'));
+    else if(viewMode==='trade')col=a.ledger.size>0?'#e07be0':'rgba(16,19,23,0.66)';
+    else if(viewMode==='land')col=a.landCells>0?'#fff':'rgba(16,19,23,0.7)';
+    else if(viewMode==='capital')col=a.glass>0?'#8fd4e8':(a.stone>0?'#9aa3ab':'rgba(16,19,23,0.62)');
+    else col=foodCount(a)>=3?'#e8b04b':(a.smelting>0?'#c98a5a':'rgba(16,19,23,0.92)');
     ctx.fillStyle=col;ctx.fillRect(a.x*CELL,a.y*CELL,CELL,CELL);
   }
 }
 
-function drawChart(canvas,series,colors,shared){
-  if(!canvas) return;
+/* --- CANVAS PREP (shared by every chart) ------------------------------
+   Replaces the old `const w=canvas.width=canvas.clientWidth*2, ...` line
+   that ran once per chart per frame. Two separate costs there:
+
+   1. Assigning canvas.width ALWAYS reallocates the pixel buffer and
+      blanks it -- even when the value is identical to what it already
+      was. So every chart paid a full buffer realloc every frame for no
+      reason, and the clearRect after it was redundant work on top.
+   2. Reading clientWidth is a measurement, so the browser must flush any
+      pending layout before it can answer. Interleaving that read with the
+      write on the same line, a dozen times a frame, forced a synchronous
+      layout recalculation per chart -- layout thrashing.
+
+   Now the write only fires on a genuine resize, so the read almost always
+   has nothing pending to flush and stays cheap.
+
+   The offsetParent check bails on charts hidden behind an inactive tab.
+   Those were being measured, reallocated, cleared and stroked in full for
+   nobody to see. Nothing is tab-hidden yet, so this is a no-op today and
+   starts paying the moment chart tabs exist. */
+function prepCanvas(canvas){
+  if(!canvas||canvas.offsetParent===null)return null;   // absent, or display:none behind a tab
+  const w=canvas.clientWidth*2,h=canvas.clientHeight*2;
+  if(w<=0||h<=0)return null;                            // not laid out yet
   const c=canvas.getContext('2d');
-  const w=canvas.width=canvas.clientWidth*2,h=canvas.height=canvas.clientHeight*2;
+  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
   c.clearRect(0,0,w,h);
+  return {c,w,h};
+}
+function drawChart(canvas,series,colors,shared){
+  const _p=prepCanvas(canvas);if(!_p)return;
+  const c=_p.c,w=_p.w,h=_p.h;
   const scaleAll=shared!==false;
   let LO=Infinity,HI=-Infinity;
   if(scaleAll)for(const s of series)for(const v of s){if(v<LO)LO=v;if(v>HI)HI=v;}
@@ -5984,21 +6923,26 @@ function drawChart(canvas,series,colors,shared){
 const HIST_ITEMS={
   commodity:[['sugar','Sugar'],['potato','Potato'],['lettuce','Lettuce'],['rice','Rice'],['stone','Stone'],['glass','Glass'],['oil','Oil'],['iron','Iron'],['sand','Sand'],['gold','Raw Gold'],['goldIndex','Coin Power']],
   sector:SECTOR_KEYS.map(k=>[k,SECTOR_NAMES[k]]),
-  biome:[['0','Desert'],['1','Steppe'],['2','Lowland']]
+  biome:[['0','Desert'],['1','Steppe'],['2','Lowland']],
+  fund:FUND_KEYS.map(k=>[k,FUND_NAMES[k]])
 };
-const HIST_CAT_LABEL={commodity:'Commodities',sector:'Sectors',biome:'Biomes'};
+const HIST_CAT_LABEL={commodity:'Commodities',sector:'Sectors',biome:'Biomes',fund:'Funds'};
 const SECTOR_COLOR={mine:'#f0c43c',collect:'#9aa3ab',glass:'#8fd4e8',rent:'#c98a5a',lend:'#7bbf6a',oil:'#8a7dab',farm:'#e8b04b',merchant:'#6fd99a',speculate:'#c65ab0'};
-const BIOME_COLOR={0:'#d4695f',1:'#e8b04b',2:'#57c7a3'};
+// brightened versions of BIOME_GROUND so the charts and legend read as the
+// same three places as the map does
+const BIOME_COLOR={0:'#d9b271',1:'#9dc46a',2:'#4e9e6a'};
 function histSeries(cat,key){
   if(cat==='commodity')return priceHist[key]||[];
   if(cat==='sector')return sectorPriceHist[key]||[];
   if(cat==='biome')return biomePriceHist[Number(key)]||[];
+  if(cat==='fund')return fundPriceHist[key]||[];
   return [];
 }
 function histColor(cat,key){
   if(cat==='commodity')return PRICE_COLOR[key]||'#e07be0';
   if(cat==='sector')return SECTOR_COLOR[key]||'#6fd99a';
   if(cat==='biome')return BIOME_COLOR[key]||'#d4695f';
+  if(cat==='fund')return FUND_COLOR[key]||'#9a86c8';
   return '#e07be0';
 }
 let selectedCategory='commodity';
@@ -6013,10 +6957,8 @@ function renderHistItemButtons(){
 }
 function drawHistChart(){
   const canvas=document.getElementById('chHist');
-  if(!canvas)return;
-  const c=canvas.getContext('2d');
-  const w=canvas.width=canvas.clientWidth*2,h=canvas.height=canvas.clientHeight*2;
-  c.clearRect(0,0,w,h);
+  const _p=prepCanvas(canvas);if(!_p)return;
+  const c=_p.c,w=_p.w,h=_p.h;
   const series=histSeries(selectedCategory,selectedKey);
   if(el.sHistStats){
     if(!series.length){el.sHistStats.textContent='— / — / —';}
@@ -6041,10 +6983,8 @@ function drawHistChart(){
 }
 function drawHistRecentChart(){
   const canvas=document.getElementById('chHistRecent');
-  if(!canvas)return;
-  const c=canvas.getContext('2d');
-  const w=canvas.width=canvas.clientWidth*2,h=canvas.height=canvas.clientHeight*2;
-  c.clearRect(0,0,w,h);
+  const _p=prepCanvas(canvas);if(!_p)return;
+  const c=_p.c,w=_p.w,h=_p.h;
   const full=histSeries(selectedCategory,selectedKey);
   const cutoff=tick-recentWindowTicks;
   const series=full.filter(pt=>pt.t>=cutoff);
@@ -6189,6 +7129,10 @@ document.getElementById('btnReset').onclick=()=>{tick=0;glassMade=0;attempts=suc
     stone:{coins:0,units:0},glass:{coins:0,units:0},oil:{coins:0,units:0},iron:{coins:0,units:0},gold:{coins:0,units:0},sand:{coins:0,units:0}};lastCommodityTraded='sugar';
   market={};bids={};marketVolume={};marketGoldSpent={};marketOrdersPosted=0;marketBidsPosted=0;
   for(const k of MARKET_ITEMS){market[k]=[];bids[k]=[];marketRefPrice[k]=MARKET_DEFAULT_REF[k];marketVolume[k]=0;marketGoldSpent[k]=0;}
+  priceLearnAskUp=priceLearnAskDown=priceLearnBidUp=priceLearnBidDown=0;
+  spectatorAgent=null;spectatorOrders=[];spectatorOrderSeq=0;
+  initFunds();fundShares={};fundCostBasis={};fundEntryTick={};fundRebalances=0;fundFeesCharged=0;expandedFund=null;
+  for(const k of MARKET_ITEMS){bidFlowBuf[k].fill(0);bidFlowIdx[k]=0;bidFlowSum[k]=0;bidFlowFilled[k]=0;bidFlowThisTick[k]=0;}
   for(const k of PRICE_ITEMS)priceHist[k]=[];PRICE_SAMPLE_EVERY=25;for(const k of PRICE_ITEMS)lastTradePrice[k]=0;
   for(const k of SECTOR_KEYS)sectorPriceHist[k]=[];
   biomePriceHist=[[],[],[]];
@@ -6243,6 +7187,9 @@ function loop(){
   drawChart(document.getElementById('chCrops'),[hist.cS,hist.cP,hist.cL,hist.cR],CROP_COL);
   drawChart(document.getElementById('chGenes'),[hist.genGene,hist.recipGene,hist.domestic,hist.rentGene],['#e07be0','#9a86c8','#d9a066','#d4695f']);
   drawChart(document.getElementById('chPop'),[hist.pop,hist.wGini,hist.lGini],['#57c7a3','#d4695f','#9a86c8'],false);
+  // shared scale (shared=true): every fund starts at 100, so a common axis
+  // is what makes them comparable at a glance
+  drawChart(document.getElementById('chFunds'),FUND_KEYS.map(k=>hist['fund_'+k]),FUND_KEYS.map(k=>FUND_COLOR[k]));
   drawHistChart();
   drawHistRecentChart();
   updateDisasterPanel();
