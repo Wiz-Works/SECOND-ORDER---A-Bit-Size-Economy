@@ -351,7 +351,7 @@
       <div id="taxPane" style="margin-top:6px;padding:6px 8px;border:1px solid #6a5a3a;border-radius:4px;background:rgba(120,90,40,0.10)">
         <div style="display:flex;justify-content:space-between;align-items:baseline">
           <span style="color:#e0b070;font-size:11px;letter-spacing:.5px">CAPITAL GAINS</span>
-          <span style="font-size:10px;color:var(--dim)" title="Goods are assessed at the standard rate; funds, sectors and biome holdings at the speculative rate. Frequent disposals are reassessed as business income.">commodities <b id="taxRateReal">—</b> · paper <b id="taxRatePaper">—</b></span>
+          <span style="font-size:10px;color:var(--dim)" title="Goods are assessed at the standard rate; funds, sectors and biome holdings at the speculative rate. Frequent disposals are reassessed as business income. Losses offset gains across both categories.">commodities <b id="taxRateReal">—</b> · paper <b id="taxRatePaper">—</b></span>
         </div>
         <div class="trade-meta" style="margin-top:3px">
           <span>Owed now <b id="taxOwed" style="color:#e8b04b">0.00</b></span>
@@ -371,7 +371,7 @@
         <div style="font-size:9px;color:var(--dim);margin-top:3px;line-height:1.35;border-top:1px solid var(--line);padding-top:3px">
           <b style="color:#8fd4e8">Goods</b> settle at the standard rate.
           <b style="color:#e07be0">Funds, sectors and biomes</b> are assessed as speculative holdings and carry the higher rate.
-          More than <span id="taxBizN">100</span> disposals in an assessment window is treated as trading for a living, not investing: rates rise by half, to a ceiling of 90%.
+          More than <span id="taxBizN">100</span> disposals in an assessment window is treated as trading for a living, not investing, and rates rise by a third to a ceiling of <span id="taxCapN">45</span>%. Losses in one category offset gains in the other, and anything still negative carries into the next window.
         </div>
         <div style="margin-top:4px;display:flex;gap:4px">
           <button onclick="taxPayAll()" style="flex:1">pay all</button>
@@ -633,9 +633,10 @@
         <span><i class="dot" style="background:#8fd4e8"></i>Broad</span>
         <span><i class="dot" style="background:#57c7a3"></i>Managed</span>
         <span><i class="dot" style="background:#e8b04b"></i>Momentum</span>
-        <span><i class="dot" style="background:#c98a5a"></i>Sector Leaders</span>
+        <span><i class="dot" style="background:#9ccf6b"></i>Agricultural</span>
         <span><i class="dot" style="background:#d4695f"></i>Frontier Opps</span>
-        <span><i class="dot" style="background:#9a86c8"></i>All-Sector EW</span>
+        <span><i class="dot" style="background:#d9b45c"></i>Bullion</span>
+        <span><i class="dot" style="background:#6fb8a0"></i>Special Sits.</span>
         <span><i class="dot" style="background:#9aa3ab"></i>Real Assets</span>
         <span><i class="dot" style="background:#e07be0"></i>Deep Value</span>
       </div>
@@ -1939,6 +1940,32 @@ function sectorPrice(sectorKey){
   const h=sectorPriceHist[sectorKey];
   return h&&h.length?h[h.length-1].p:sectorPriceFromStats(computeSectorStats(),sectorKey);
 }
+/* SECTORS OPEN FOR TRADING 5,000 TICKS AFTER THEY ACTUALLY EXIST.
+   Sectors do not all begin at t0. Glassmaking needs sand, a smelter and a
+   high enough industry gene, so glassmakers appear thousands of ticks after
+   farmers and miners; drillers and traders arrive later still. A sector's
+   first few prices are one or two agents' net worth, which is noise rather
+   than a price, and buying into that hands the position an arbitrary basis
+   that never washes out.
+
+   The clock starts when the sector first has a real price, not at world
+   inception — so a sector that appears at t40,000 opens at t45,000, and the
+   delay means the same thing for every sector regardless of when it emerged. */
+const SECTOR_TRADE_DELAY=5000;
+let sectorIncepted={};
+function noteSectorInception(){
+  for(const k of SECTOR_KEYS){
+    if(sectorIncepted[k]!==undefined)continue;
+    if(sectorPrice(k)>0)sectorIncepted[k]=tick;
+  }
+}
+function sectorTradeable(k){
+  return sectorIncepted[k]!==undefined && tick-sectorIncepted[k]>=SECTOR_TRADE_DELAY;
+}
+function sectorOpensIn(k){
+  if(sectorIncepted[k]===undefined)return null;      // has not emerged yet
+  return Math.max(0,SECTOR_TRADE_DELAY-(tick-sectorIncepted[k]));
+}
 let sectorShares={},sectorCostBasis={},sectorEntryTick={};
 
 /* --- FUNDS ------------------------------------------------------------
@@ -1966,7 +1993,7 @@ let sectorShares={},sectorCostBasis={},sectorEntryTick={};
    repopulates the position revives at its original size. Rebalancing
    skips those legs (can't divide by zero) and splits value equally among
    the survivors. */
-const FUND_KEYS=['broad','broadMgd','growth','topSec','risk','allSec','stable','value4'];
+const FUND_KEYS=['broad','broadMgd','growth','risk','staple','stable','value4','bullion','absorb'];
 /* --- SPECTATOR CAPITAL GAINS TAX --------------------------------------
    The player's capital is exogenous: buys inject coins into agent hands
    from nowhere, sells drain them out permanently. A profitable player is
@@ -1989,7 +2016,7 @@ const FUND_KEYS=['broad','broadMgd','growth','topSec','risk','allSec','stable','
    pro-people head taxes the player harder, exactly as it taxes landlords
    harder. The player is now inside the policy the Fed is running. */
 const SPEC_TAX_EVERY=5000;         // ticks between assessments; also the payment window
-const SPEC_TAX_BASE=0.15;          // base rate on net realized gains, scaled by Fed stance
+const SPEC_TAX_BASE=0.08;          // base rate on net realized gains, scaled by Fed stance
 const SPEC_TAX_WELFARE_SHARE=0.5;  // remainder goes to the reserve (drill loans)
 const SPEC_TAX_PENALTY=0.25;       // surcharge when the state has to liquidate for you
 /* PAPER vs REAL gains are taxed differently because they came from different
@@ -2012,12 +2039,12 @@ const SPEC_TAX_PENALTY=0.25;       // surcharge when the state has to liquidate 
    still reaches spectatorCapital and can still be spent into the commodity
    book, which injects coins at the point of purchase. It is a brake on
    ordinary play, not a wall against a determined one. */
-const SPEC_PAPER_TAX_BASE=0.40;    // funds, sectors, biomes — burned, never remitted
+const SPEC_PAPER_TAX_BASE=0.20;    // funds, sectors, biomes — burned, never remitted
 const SPEC_BUSINESS_SALES=100;     // closes per window above which you are taxed as a business
-const SPEC_BUSINESS_MULT=1.5;
-const SPEC_TAX_CAP=0.90;
+const SPEC_BUSINESS_MULT=1.35;
+const SPEC_TAX_CAP=0.45;
 let specTaxableGains=0, specTaxPaid=0, specTaxEvents=0;
-let specGainsPaper=0, specSalesWindow=0, specTaxBurned=0, specBusinessTier=false;
+let specGainsPaper=0, specSalesWindow=0, specSaleIds=new Set(), specTaxBurned=0, specBusinessTier=false;
 let specTaxOwedBurn=0;
 let specTaxOwed=0, specTaxDueTick=0, specTaxPenaltyPaid=0, specForcedLiquidations=0;
 /* Money set aside against the next assessment. Drawn on automatically the
@@ -2033,7 +2060,13 @@ function recordClosedTrade(t){
   tradeStats.totalPnl+=t.pnl;
   tradeStats.totalHold+=(t.exitTick-t.entryTick);
   if(!tradeStats.best||t.pnl>tradeStats.best.pnl)tradeStats.best=t;
-  specSalesWindow++;
+  /* Count DISPOSALS, not fills. A resting limit order gets nibbled a unit at a
+     time — one run logged 6,373 "trades" that were really a handful of orders —
+     so counting fills pushed a player into the business tier off a single
+     position. Limit fills carry the order id and are counted once. */
+  if(t.saleId!==undefined){
+    if(!specSaleIds.has(t.saleId)){specSaleIds.add(t.saleId);specSalesWindow++;}
+  }else specSalesWindow++;
   if(t.cls==='paper')specGainsPaper+=t.pnl;   // no payer — will be burned, never remitted
   else specTaxableGains+=t.pnl;               // real coins from a real agent — remitted
 
@@ -2147,6 +2180,7 @@ function refreshTaxPane(){
   el.taxRateReal.style.color='#8fd4e8';
   el.taxRatePaper.style.color='#e07be0';
   if(el.taxBizN)el.taxBizN.textContent=SPEC_BUSINESS_SALES;
+  if(el.taxCapN)el.taxCapN.textContent=(SPEC_TAX_CAP*100).toFixed(0);
   const est=(specTaxableGains>0?specTaxableGains*rReal:0)+(specGainsPaper>0?specGainsPaper*rPaper:0);
   el.taxAccruing.textContent=est.toFixed(2);
   el.taxSales.textContent=tier>1?(specSalesWindow+' BIZ'):(specSalesWindow+' / '+SPEC_BUSINESS_SALES);
@@ -2231,14 +2265,22 @@ function assessSpectatorTax(){
   /* Business tier: high close counts mean you are trading, not investing. */
   specBusinessTier=specSalesWindow>SPEC_BUSINESS_SALES;
   const tier=specBusinessTier?SPEC_BUSINESS_MULT:1;
-  specSalesWindow=0;
+  specSalesWindow=0;specSaleIds.clear();
   const fed=fedProductionTaxMultiplier();
   const realRate =Math.min(SPEC_TAX_CAP,SPEC_TAX_BASE*fed*tier);
   const paperRate=Math.min(SPEC_TAX_CAP,SPEC_PAPER_TAX_BASE*fed*tier);
-  const realDue =specTaxableGains>0?specTaxableGains*realRate:0;
-  const paperDue=specGainsPaper>0?specGainsPaper*paperRate:0;
-  if(specTaxableGains>0)specTaxableGains=0;
-  if(specGainsPaper>0)specGainsPaper=0;
+  /* Offset across classes before assessing. Previously the two accumulators
+     were assessed independently, so a player up 100 on goods and down 100 on
+     funds was flat overall and still paid tax on the 100 — the tax could
+     genuinely exceed the profit. A loss on either side now reduces the other,
+     and only what survives is taxed. Anything still negative carries forward. */
+  let gReal=specTaxableGains, gPaper=specGainsPaper;
+  if(gReal>0&&gPaper<0){const off=Math.min(gReal,-gPaper);gReal-=off;gPaper+=off;}
+  else if(gPaper>0&&gReal<0){const off=Math.min(gPaper,-gReal);gPaper-=off;gReal+=off;}
+  const realDue =gReal>0?gReal*realRate:0;
+  const paperDue=gPaper>0?gPaper*paperRate:0;
+  specTaxableGains=gReal>0?0:gReal;      // positives cleared, losses carry
+  specGainsPaper  =gPaper>0?0:gPaper;
   const due=realDue+paperDue;
   if(due<=0.0001)return;
   specTaxOwed+=due;specTaxOwedBurn+=paperDue;
@@ -2257,18 +2299,20 @@ function assessSpectatorTax(){
    thin books plus leveraged speculators, and that Real Assets is a third
    gold — the single most volatile thing in this economy. */
 const FUND_NAMES={broad:'Total Commodity Market Index',broadMgd:'Commodity Equal-Weight Index',growth:'Momentum Factor Fund',
-  topSec:'Sector Leaders Select',risk:'Frontier Opportunities Fund',allSec:'All-Sector Equal Weight',stable:'Real Assets Fund',value4:'Deep Value Fund'};
+  risk:'Frontier Opportunities Fund',staple:'Agricultural Value Fund',stable:'Real Assets Fund',value4:'Deep Value Fund',
+  bullion:'Bullion Tactical Fund',absorb:'Special Situations Fund'};
 const FUND_COLOR={broad:'#8fd4e8',broadMgd:'#57c7a3',growth:'#e8b04b',
-  topSec:'#c98a5a',risk:'#d4695f',allSec:'#9a86c8',stable:'#9aa3ab',value4:'#e07be0'};
+  risk:'#d4695f',staple:'#9ccf6b',stable:'#9aa3ab',value4:'#e07be0',bullion:'#d9b45c',absorb:'#6fb8a0'};
 const FUND_DESC={
   broad:'All ten commodities, equal value at inception, then never touched again. Pure buy-and-hold: winners are allowed to grow into a larger and larger share of the fund. No management, no fee. The baseline every other fund is measured against.',
   broadMgd:'The same ten commodities, but rebalanced back to equal value every 2,000 ticks — systematically selling what rose and buying what fell. Charges a 0.5% management fee every 10,000 ticks. Its gap versus the Total Commodity Market Index is a direct read on whether this economy trends or mean-reverts.',
   growth:'The three commodities with the strongest price growth over the trailing 5,000 ticks, refreshed every 2,000. Momentum: it buys what has already run. Note it will tend to select whatever is in shortage, which is also whatever is least liquid.',
-  topSec:'The three sectors with the highest share price, equal value, refreshed every 5,000 ticks. Sector price is mean net worth per member, so this tracks where wealth concentrates per head — which is usually the smaller sectors, not the largest.',
   risk:'A deliberately concentrated bet: sand, lettuce and oil, equal value, rebalanced every 2,000 ticks. Three of the thinnest, most structurally cheap books in the economy — the ones that swing hardest when anything disturbs them.',
-  allSec:'All nine sectors, equal value, rebalanced every 2,000 ticks. The sector-side benchmark for the Sector Leaders Select and Frontier Opportunities funds.',
   value4:'The four cheapest commodities, refreshed every 5,000 ticks. A pure value screen: it buys whatever is currently priced lowest, which in practice means whatever the market has given up on. Note it ranks on absolute coin price, so it will favour the structural glut goods rather than rotating between temporarily-cheap ones.',
-  stable:'Gold, stone and iron — the durable, non-perishable goods. Equal value, rebalanced every 5,000 ticks. Hard assets rather than anything that rots: while food prices ran into the thousands, stone and gold stayed near where they started, so this tracks the part of the economy the coin has not run away from.'
+  staple:'Weights the four food crops by the energy each delivers per coin, not by price alone \u2014 sugar returns six times what rice does, so cheap is not the same as good value. It tilts toward whatever is feeding the population most cheaply and away from whatever has run up, and rotates hardest when a blizzard or drought moves a crop. No crop below eight percent or above half, because a monoculture is one bad winter from ruin.',
+  bullion:'Leans into gold as it gets cheaper against its own 5,000-tick average and out of it as it gets dearer, in steps: nine tenths in gold a quarter below the average, half at fair value, a tenth a quarter above. Rebalances every 500 ticks. It never drops below a tenth in either gold or coins, so it always has something to sell into a rally and something to buy a crash with. Quotes ten percent under spot to buy and ten percent over to sell, rather than competing at the front of the book \u2014 it waits to be hit rather than chasing.',
+  absorb:'Buys the four commodities the market is most choking on \u2014 heaviest resting supply against the thinnest demand \u2014 and re-screens every 500 ticks, because a glut absorbed late is no glut at all. It quotes ten percent under spot to buy and ten percent over to sell, never crossing the spread \u2014 it is the standing bid for goods nobody else wants, which is where the cheapest prices are and also where a holding can become impossible to sell.',
+  stable:'Glass, stone and iron — what the economy builds with. Equal value, rebalanced every 5,000 ticks. Nothing here rots and nothing here is hoarded as money: stone is crushed into iron, sand is smelted into glass, and all three end up in houses, crushers, drills and tractors. It rises when the world is building and sits flat when it is only feeding itself.'
 };
 /* Display splits. Only Sector Leaders still needs one: every constituent is a
    sector, so it cannot trade a real book and its index runs far ahead of the
@@ -2286,7 +2330,7 @@ const FUND_DESC={
    two no longer share the 100-at-inception base with the others, so the
    funds chart is no longer strictly apples-to-apples -- hence the divisor
    is labelled in the row rather than applied silently. */
-const FUND_SPLIT={topSec:100};
+const FUND_SPLIT={};
 function fundSplit(key){return FUND_SPLIT[key]||1;}
 const FUND_MGMT_FEE=0.005;      // 0.5%
 const FUND_FEE_EVERY=10000;     // ticks between fee charges
@@ -2296,7 +2340,19 @@ const FUND_DEFS={
   broad:   {legs:()=>MARKET_ITEMS.map(k=>({cat:'commodity',key:k})), rebalance:0,    fee:false},
   broadMgd:{legs:()=>MARKET_ITEMS.map(k=>({cat:'commodity',key:k})), rebalance:2000, fee:true},
   growth:  {legs:()=>pickTopGrowth(3),                               rebalance:2000, fee:true, dynamic:true, warmup:FUND_GROWTH_LOOKBACK},
-  topSec:  {legs:()=>pickTopSectors(3),                              rebalance:5000, fee:true, dynamic:true},
+  /* warmup: these two hold nothing tradeable, so their units are set once at
+     inception and never re-based. That makes the inception PRICE permanent —
+     and sector prices in the first few thousand ticks are cold-start noise,
+     not discovery. Launching at t0 locked in a distorted unit count for the
+     whole run. They now wait for prices to mean something first, the same
+     reason the CPI gauge does not emit a reading before CPI_WARMUP_TICKS. */
+  /* The only fund that judges its holdings by what they DO rather than what
+     they cost. Food is the one good with a use value the sim actually models,
+     so this weights the four crops by energy delivered per coin and rotates as
+     prices move — which happens most sharply when a blizzard or drought hits a
+     biome, making this the fund that responds to weather. */
+  staple:  {legs:()=>CROP_KEYS.map(k=>({cat:'commodity',key:k})),   rebalance:2000, fee:true,
+            alloc:()=>foodAlloc()},
   /* Third leg was the speculators' sector. A sector cannot be bought, so the
      fund could only hold it as a fiction — rebalanced units pumped without
      bound, fixed units swelled with nominal wealth until they were the whole
@@ -2305,13 +2361,73 @@ const FUND_DEFS={
      fund can actually own it. */
   risk:    {legs:()=>[{cat:'commodity',key:'sand'},{cat:'commodity',key:'lettuce'},{cat:'commodity',key:'oil'}],
                                                                      rebalance:2000, fee:true},
-  allSec:  {legs:()=>SECTOR_KEYS.map(k=>({cat:'sector',key:k})),      rebalance:2000, fee:true},
-  stable:  {legs:()=>[{cat:'commodity',key:'gold'},{cat:'commodity',key:'stone'},{cat:'commodity',key:'iron'}],
+  /* Gold moved out when Bullion Tactical arrived — two funds anchored on the
+     same metal was one too many, and gold behaves like money here rather than
+     like a material. Glass takes its place, which makes this a pure
+     PRODUCTION-materials basket: stone crushed to iron, sand smelted to glass,
+     every leg something the economy makes and builds with rather than hoards. */
+  stable:  {legs:()=>[{cat:'commodity',key:'glass'},{cat:'commodity',key:'stone'},{cat:'commodity',key:'iron'}],
                                                                      rebalance:5000, fee:true},
-  value4:  {legs:()=>pickCheapest(4,0),                              rebalance:5000, fee:true, dynamic:true}
+  /* runTrigger: a value screen buys what is cheap, so a hard run means its
+     holdings are no longer cheap. Waiting out the rest of a 5,000-tick cycle
+     hands the move back. Doubling off the 500-tick low re-screens immediately
+     and rotates into whatever is cheap NOW. */
+  value4:  {legs:()=>pickCheapest(4,0),                              rebalance:5000, fee:true, dynamic:true,
+            runTrigger:{lookback:500, mult:2.0, cooldown:500}},
+  /* Tactical, not passive. Every other fund holds a fixed shape and rebalances
+     back to it; this one changes how much gold it wants based on where gold is
+     trading against its own 5,000-tick average, and parks the difference in
+     cash. Cheap gold means accumulate, expensive gold means distribute, and in
+     between it sits still rather than churning.
+
+     The 10% floors on each side are what make it a fund rather than a switch.
+     Never fully in cash, so it always has some exposure when a rally starts;
+     never fully invested, so it always has coins to buy a dislocation with.
+
+     bidUnder quotes 10% below spot instead of at the top of the book — it is
+     not chasing fills, it is leaving a standing offer for anyone who has to
+     sell in a hurry, which is exactly when it wants to be buying. */
+  /* Buys whatever the market is choking on. Rebalances fast because gluts
+     move fast — absorbing last cycle's oversupply is worth nothing. It is the
+     only fund whose selection depends on ORDER FLOW rather than price, and
+     the only one that reliably fills, because it goes where the supply is.
+
+     It is PATIENT by design: a liquidity provider that crossed the spread
+     would be paying up for the very supply it exists to absorb. It rests a
+     bid ten percent under spot and waits to be hit, which is what makes it a
+     standing bid rather than another buyer competing at the front.
+
+     The risk is inherent to the strategy and is the point: it buys things
+     falling for a reason, and it can end up holding a good whose bid side is
+     empty, unable to exit at any sane price. That is the cost of being the
+     buyer when there is no other. */
+  absorb:  {legs:()=>pickGlutted(4),                                rebalance:500, fee:true, dynamic:true,
+            bidUnder:0.10, askOver:0.10},
+  bullion: {legs:()=>[{cat:'commodity',key:'gold'}],                rebalance:500, fee:true,
+            bidUnder:0.10, askOver:0.10,
+            alloc:(f)=>{
+              const spot=(discoveredCoinPrice&&discoveredCoinPrice.gold)||0;
+              const ma=retailMA('gold')||0;
+              if(!(spot>0&&ma>0))return {gold:f.goldW===undefined?0.5:f.goldW};
+              /* A LADDER, not a switch. Weight steps down as gold gets dearer
+                 against its own average, so the fund leans in gradually rather
+                 than flipping between two extremes — and the band around fair
+                 value is wide enough that ordinary noise leaves it alone. */
+              const dev=spot/ma-1;
+              let w;
+              if(dev<=-0.25)      w=0.90;   // 25% under — heaviest accumulation
+              else if(dev<=-0.15) w=0.70;
+              else if(dev<=-0.05) w=0.60;
+              else if(dev <  0.05)w=0.50;   // fair value — balanced, no churn
+              else if(dev <  0.15)w=0.40;
+              else if(dev <  0.25)w=0.30;
+              else                w=0.10;   // 25% over — heaviest distribution
+              f.goldW=w;
+              return {gold:w};
+            }}
 };
 let funds={},fundPriceHist={},fundShares={},fundCostBasis={},fundEntryTick={};
-let fundRebalances=0,fundFeesCharged=0,expandedFund=null;
+let fundRebalances=0,fundRunTriggers=0,fundFeesCharged=0,expandedFund=null;
 /* --- LIVE FUNDS: rebalancing against the real order book ---------------
    A synthetic fund has infinite liquidity, and that is not a cosmetic
    simplification -- it is what let the rebalanced funds compound to 1e16.
@@ -2336,16 +2452,16 @@ let fundRebalances=0,fundFeesCharged=0,expandedFund=null;
    Shares in a live fund are still paper: buying them does not inject
    capital into the fund. The fund trades only its seed and what it earns. */
 /* Every fund whose legs are ALL commodities transacts on the real book.
-   The three missing ones are not an oversight: topSec and allSec hold only
-   sector legs, and risk holds Traders alongside sand and lettuce. Sectors
-   have no order book at all -- buySectorShares mints shares from
-   capitalAmount/price with no counterparty -- so there is physically
-   nothing for those legs to trade against. fundIsLive() enforces this:
-   flagging them here would be silently ignored. */
+   Every fund now qualifies: the last sector-only basket was retired, so there
+   is no longer any fund holding a leg with no order book behind it. fundIsLive()
+   still enforces the rule for any basket added later. */
 /* Vestigial for the public funds — fundIsLive() now decides from the legs
    themselves. Kept because the private-fund seats still use it to mark which
    baskets a manager can hold as PHYSICAL inventory rather than a synthetic. */
-const FUND_LIVE={broad:true,broadMgd:true,growth:true,stable:true};
+/* Retired. It once marked which baskets were commodity-only, back when four of
+   them carried sector legs. Every public basket is commodity-only now, so
+   fundIsLive() and privIsSynthetic() both answer from the legs themselves and
+   nothing needs a hand-maintained list that could fall out of step. */
 const FUND_SEED_BUFFER=1.2;     // seed = cost of one unit of every leg, plus headroom
 let fundSeedCoins=0,fundSeedMinted=0,fundIntendedVol=0,fundFilledVol=0,fundTaxPaid=0;
 function makeFundAgent(idx){
@@ -2449,6 +2565,68 @@ function pickCheapest(nComm,nSec){
   for(const x of sec.slice(0,nSec))out.push({cat:'sector',key:x.k});
   return out;
 }
+/* THE MOST OVERSUPPLIED BOOKS: heavy asks, thin bids.
+   Ranks each commodity by resting ask depth against resting bid depth, so it
+   selects whatever the economy is currently trying to get rid of and nobody
+   is bidding for. Oil sitting at 753 asks against zero bids is the shape this
+   is looking for.
+
+   Depth is measured in UNITS, not order count, so one large ask counts for
+   what it actually is. A book with no bids at all scores highest, which is
+   correct — that is precisely where a buyer is missing. Books with no asks
+   are skipped: there is nothing to absorb. */
+/* FOOD, WEIGHTED BY ENERGY PER COIN.
+   Buying "whatever is cheapest" is the wrong screen for food, because the four
+   crops are not interchangeable: sugar returns 16 energy a unit, potato and
+   lettuce 6, rice 2.5. Cheap rice can be worse value than dear sugar. What
+   matters is energy bought per coin spent, which is the only sense in which
+   one food is genuinely better value than another.
+
+   Weights are proportional to that ratio, so the fund tilts hard toward
+   whatever is feeding the population most cheaply right now and away from
+   whatever has run up — which is the sell-the-expensive behaviour, corrected
+   for what the food is actually worth. Clamped so no single crop dominates
+   and none is fully abandoned: a monoculture would be wiped by one blizzard.
+
+   Rice is charged its harvest cost, the only crop that pays one. */
+const FOOD_MIN_W=0.08, FOOD_MAX_W=0.50;
+function foodEnergyValue(){
+  const out={};
+  for(let i=0;i<CROP_KEYS.length;i++){
+    const k=CROP_KEYS[i];
+    const px=(discoveredCoinPrice&&discoveredCoinPrice[k])||0;
+    if(px<=0)continue;
+    const e=CROP_ENERGIES[i]-(k==='rice'?RICE_HARVEST_ENERGY:0);
+    if(e<=0)continue;
+    out[k]=e/px;                       // energy per coin
+  }
+  return out;
+}
+function foodAlloc(){
+  const ev=foodEnergyValue();
+  const keys=Object.keys(ev);
+  if(!keys.length)return {};
+  let tot=0;for(const k of keys)tot+=ev[k];
+  const w={};
+  for(const k of keys)w[k]=clamp(ev[k]/tot,FOOD_MIN_W,FOOD_MAX_W);
+  let sum=0;for(const k of keys)sum+=w[k];
+  for(const k of keys)w[k]/=sum;       // renormalise after clamping
+  return w;
+}
+function pickGlutted(n){
+  const scored=[];
+  for(const k of MARKET_ITEMS){
+    const px=(discoveredCoinPrice&&discoveredCoinPrice[k])||0;
+    if(px<=0)continue;
+    let ask=0,bid=0;
+    const ab=market[k]; if(ab)for(const o of ab)if(o.qty>0)ask+=o.qty;
+    const bb=bids[k];   if(bb)for(const o of bb)if(o.qty>0)bid+=o.qty;
+    if(ask<=0)continue;                    // nothing on offer, nothing to absorb
+    scored.push({k,score:ask/(bid+1)});    // +1 so an empty bid side ranks top without dividing by zero
+  }
+  scored.sort((a,b)=>b.score-a.score);
+  return scored.slice(0,n).map(x=>({cat:'commodity',key:x.k}));
+}
 function pickTopSectors(n){
   const scored=SECTOR_KEYS.map(k=>({k,p:sectorPrice(k)||0})).filter(x=>x.p>0);
   scored.sort((a,b)=>b.p-a.p);
@@ -2504,6 +2682,40 @@ function fundCancelOrders(f){
     }
   }
 }
+/* HOW MUCH CAN BE BOUGHT WITHOUT PAYING MORE THAN cap.
+   marketBuy walks the ask book cheapest-first and pays whatever each level
+   demands — it has no price limit. A fund calling it for a large shortfall
+   would climb the book to whatever silly ask sat at the top, then mark the
+   position back at discoveredCoinPrice and book an instant loss. On a wide
+   book that is catastrophic: gold has traded with asks at 4.000 against a
+   0.193 mark, a 95% haircut on settle.
+
+   These two helpers measure the depth available INSIDE an acceptable price
+   band, so the aggressive pass can take the good part of the book and leave
+   the rest to a resting limit order instead of paying through it. Every fund
+   now has a limit price; patient funds simply set theirs at a discount and
+   skip the aggressive pass entirely. */
+const FUND_MAX_SLIP=0.05;      // aggressive fills may not cross more than 5% through the mark
+function fundDepthUnderAsk(item,cap){
+  const book=market[item];
+  if(!book||!book.length)return 0;
+  let q=0;
+  for(const o of book){
+    if(o.qty<=0)continue;
+    if(o.price<=cap)q+=o.qty;
+  }
+  return q;
+}
+function fundDepthOverBid(item,floor){
+  const book=bids[item];
+  if(!book||!book.length)return 0;
+  let q=0;
+  for(const o of book){
+    if(o.qty<=0)continue;
+    if(o.price>=floor)q+=o.qty;
+  }
+  return q;
+}
 function fundRebalanceLive(f,legs){
   fundCancelOrders(f);
   const px={},want={};
@@ -2518,27 +2730,62 @@ function fundRebalanceLive(f,legs){
   }
   const active=tradeable.filter(l=>px[l.key]>0);
   if(!active.length||v<=0)return;
-  const target=v/active.length;
-  for(const leg of active)want[leg.key]=target/px[leg.key];
-  f.intended={};f.filled={};
-  for(const leg of active){
-    const excess=Math.max(0,getQty(f.agent,leg.key))-want[leg.key];
-    if(excess>0.0001){
-      f.intended[leg.key]=-excess;
-      const r=sellIntoBestBid(f.agent,leg.key,excess);
-      f.filled[leg.key]=-r.take;
-      fundIntendedVol+=excess;fundFilledVol+=r.take;
-    }
+  /* Most baskets split value equally. A fund may instead publish an ALLOCATION
+     — explicit target weights that leave the remainder in cash — which is how
+     a tactical fund holds more or less of something as conditions change,
+     rather than always being fully invested in fixed proportions. */
+  const alloc=f.alloc?f.alloc(f):null;
+  if(alloc){
+    for(const leg of active)want[leg.key]=(v*(alloc[leg.key]||0))/px[leg.key];
+  }else{
+    const target=v/active.length;
+    for(const leg of active)want[leg.key]=target/px[leg.key];
   }
-  for(const leg of active){
-    const short=want[leg.key]-Math.max(0,getQty(f.agent,leg.key));
-    if(short>0.0001){
-      f.intended[leg.key]=short;
-      const before=f.agent.coins;
-      const got=marketBuy(f.agent,leg.key,short);
-      f.filled[leg.key]=got;
-      fundIntendedVol+=short;fundFilledVol+=got;
-      if(got>0)fundTaxPaid+=(before-f.agent.coins)*commodityBaseTaxRate(leg.key)*fedProductionTaxMultiplier();
+  f.intended={};f.filled={};
+  /* PATIENT funds skip this entirely. The aggressive pass takes whatever the
+     book offers — marketBuy walks the asks paying whatever they demand — and
+     then fundValue marks the position at discoveredCoinPrice. On a wide book
+     that is an instant loss: gold has traded with asks at 4.000 against a mark
+     of 0.193, so a fund crossing that spread lost ~95% of the outlay the
+     moment it settled. That is what made Bullion step down at every rebalance
+     from cash into gold.
+
+     A fund that has published limit prices (bidUnder/askOver) is declaring the
+     price it is willing to trade at. Crossing the spread contradicts that, so
+     it now only ever RESTS orders and accepts that it will often miss its
+     target — which is what a patient value buyer actually does. */
+  const patient=!!(f.bidUnder||f.askOver);
+  if(!patient){
+    for(const leg of active){
+      const excess=Math.max(0,getQty(f.agent,leg.key))-want[leg.key];
+      if(excess>0.0001){
+        f.intended[leg.key]=-excess;
+        // never sell more than 5% below the mark: take only the bids that clear it
+        const floor=px[leg.key]*(1-FUND_MAX_SLIP);
+        const sellable=Math.min(excess,fundDepthOverBid(leg.key,floor));
+        let take=0;
+        if(sellable>0.0001){
+          const r=sellIntoBestBid(f.agent,leg.key,sellable);
+          take=r.take||0;
+        }
+        f.filled[leg.key]=-take;
+        fundIntendedVol+=excess;fundFilledVol+=take;
+      }
+    }
+    for(const leg of active){
+      const short=want[leg.key]-Math.max(0,getQty(f.agent,leg.key));
+      if(short>0.0001){
+        f.intended[leg.key]=short;
+        // never pay more than 5% over the mark: take only the asks that clear it
+        const cap=px[leg.key]*(1+FUND_MAX_SLIP);
+        const buyable=Math.min(short,fundDepthUnderAsk(leg.key,cap));
+        let got=0;
+        const before=f.agent.coins;
+        if(buyable>0.0001)got=marketBuy(f.agent,leg.key,buyable);
+        f.filled[leg.key]=got;
+        fundIntendedVol+=short;fundFilledVol+=got;
+        if(got>0)fundTaxPaid+=(before-f.agent.coins)*commodityBaseTaxRate(leg.key)*fedProductionTaxMultiplier();
+      }
     }
   }
   /* Whatever the aggressive pass could not fill now RESTS on the book until
@@ -2551,19 +2798,30 @@ function fundRebalanceLive(f,legs){
     const held=Math.max(0,getQty(f.agent,leg.key));
     const gap=want[leg.key]-held;
     if(gap>0.0001&&f.agent.coins>0.0001){
-      const bp=competitiveBidPrice(leg.key)||px[leg.key];
+      /* A fund with bidUnder quotes that far BELOW spot instead of competing
+         at the top of the book: it is not trying to fill now, it is leaving a
+         standing offer for anyone who needs to sell in a hurry. */
+      const bp=f.bidUnder?px[leg.key]*(1-f.bidUnder):(competitiveBidPrice(leg.key)||px[leg.key]);
       if(bp>0){
         const spend=Math.min(gap*bp,f.agent.coins);
         const q=spend/bp;
         if(q>0.0001){
           f.agent.coins-=spend;
           bids[leg.key].push({id:f.agent.id,qty:q,price:bp,tick,escrow:spend,fundQty0:q,ttl:f.rebEvery||2000});
+          if(patient){f.intended[leg.key]=(f.intended[leg.key]||0)+q;fundIntendedVol+=q;}
         }
       }
     }else if(gap<-0.0001){
-      const ap=competitiveAskPrice(leg.key)||px[leg.key];
+      /* askOver mirrors bidUnder on the sell side: quote that far ABOVE spot
+         instead of undercutting to the front of the queue. A patient fund
+         wants to be the offer someone hits when they need gold badly, not the
+         cheapest seller in the book. */
+      const ap=f.askOver?px[leg.key]*(1+f.askOver):(competitiveAskPrice(leg.key)||px[leg.key]);
       const q=-gap;
-      if(ap>0&&q>0.0001)market[leg.key].push({id:f.agent.id,qty:q,price:ap,tick,fundQty0:q,ttl:f.rebEvery||2000});
+      if(ap>0&&q>0.0001){
+        market[leg.key].push({id:f.agent.id,qty:q,price:ap,tick,fundQty0:q,ttl:f.rebEvery||2000});
+        if(patient){f.intended[leg.key]=(f.intended[leg.key]||0)-q;fundIntendedVol+=q;}
+      }
     }
   }
   f.legs=legs;
@@ -2617,6 +2875,7 @@ function stepFunds(){
         f.agent.coins=grant;fundSeedCoins+=grant;
         f.legs=legs;
         f.rebEvery=def.rebalance||2000;     // resting orders live one full cycle
+        f.alloc=def.alloc||null;f.bidUnder=def.bidUnder||0;f.askOver=def.askOver||0;
         fundRebalanceLive(f,legs);          // spend the seed into the basket
         const v0=fundValue(f);
         if(v0<=0){f.agent=null;continue;}   // book was too thin to build anything
@@ -2633,6 +2892,35 @@ function stepFunds(){
       }
       f.born=true;f.bornTick=tick;f.lastReb=tick;f.lastFee=tick;
       continue;
+    }
+    /* RUN TRIGGER. Some funds should not sit through a violent move waiting
+       for the clock. A fund carrying a runTrigger tracks its own value over a
+       short lookback and rebalances early once it has run far enough above its
+       recent low — for a value screen that means the cheap things it bought
+       are no longer cheap, and waiting out the rest of a 5,000-tick cycle
+       means giving the move back.
+
+       A cooldown stops one violent stretch from triggering every tick, and the
+       window is cleared on fire so the next trigger measures from the new
+       level rather than from a low that has already been acted on. */
+    if(def.runTrigger&&f.born){
+      const rt=def.runTrigger, v=fundValue(f);
+      if(v>0){
+        f.runWin=f.runWin||[];
+        f.runWin.push({t:tick,v});
+        while(f.runWin.length&&tick-f.runWin[0].t>rt.lookback)f.runWin.shift();
+        let lo=Infinity;
+        for(const p of f.runWin)if(p.v<lo)lo=p.v;
+        if(isFinite(lo)&&lo>0&&v>=lo*rt.mult&&tick-f.lastReb>=(rt.cooldown||500)){
+          const legs=def.dynamic?def.legs():f.legs;
+          if(legs.length&&live){
+            fundRebalanceLive(f,legs);fundRebalances++;fundRunTriggers++;
+            f.legs=legs;f.lastReb=tick;f.runWin=[];
+            note(`t${tick}: <em>${FUND_NAMES[key]||key}</em> rebalances early — up ${(((v/lo)-1)*100).toFixed(0)}% from its ${rt.lookback}-tick low.`);
+            continue;
+          }
+        }
+      }
     }
     if(def.rebalance&&tick-f.lastReb>=def.rebalance){
       const legs=def.dynamic?def.legs():f.legs;
@@ -2660,7 +2948,7 @@ function stepFunds(){
       }
       f.lastReb=tick;
       // fee is charged on the rebalance that crosses the interval, so it
-      // lands every 5th rebalance for the 2k funds and every 2nd for topSec
+      // lands every 5th rebalance for the 2k funds, more often for faster ones
       if(def.fee&&tick-f.lastFee>=FUND_FEE_EVERY){
         if(live){
           // same 0.5% haircut, applied to real holdings and cash. Vanishes,
@@ -2776,6 +3064,11 @@ function buySectorShares(sectorKey,capitalAmount){
   if(capitalAmount<=0)return {bought:0,error:'insufficient spectator capital'};
   const price=sectorPrice(sectorKey);
   if(price<=0)return {bought:0,error:'no active participants in this sector right now'};
+  if(!sectorTradeable(sectorKey)){
+    const left=sectorOpensIn(sectorKey);
+    return {bought:0,error:left===null?'this sector has not emerged yet'
+      :'this sector is too newly established to trade — opens in '+left+' ticks'};
+  }
   if(!(sectorShares[sectorKey]>0.0001))sectorEntryTick[sectorKey]=tick;   // fresh position — average-cost accounting, so this marks when the CURRENT position started, not a FIFO lot
   const shares=capitalAmount/price;
   sectorShares[sectorKey]=(sectorShares[sectorKey]||0)+shares;
@@ -3190,7 +3483,7 @@ function sweepSpectatorOrders(){
            existed — were entirely untaxed. Selling on a limit was a complete
            tax exemption. Recorded here, at the same point the basis leaves. */
         recordClosedTrade({
-          id:++tradeIdCounter, item:so.item, units:newFill,
+          id:++tradeIdCounter, item:so.item, units:newFill, saleId:so.oid,
           entryPrice:newFill>0?basisRetired/newFill:0, entryTick:so.tick,
           exitPrice:so.price, exitTick:tick,
           pnl:newFill*so.price-basisRetired
@@ -3794,8 +4087,16 @@ function updateTradingDashboard(){
       sectorHtml+=`<div class="comm-dot" style="background:${SECTOR_COLOR[k]||'var(--dim)'}"></div>`;
       sectorHtml+=`<span class="comm-name">${SECTOR_NAMES[k]}</span>`;
       sectorHtml+=`<span class="comm-price">${price>0?price.grp(2):'—'}</span>`;
+      /* A newly-emerged sector shows how long until it opens instead of a Buy
+         button. Selling stays available: a position can only exist if the
+         sector was already open when it was taken. */
+      const _open=sectorTradeable(k), _in=sectorOpensIn(k);
+      if(!_open){
+        sectorHtml+=`<span class="comm-signal" style="color:var(--dim)" title="${_in===null?'This sector has no active members yet.':'Newly established. Opens for trading in '+_in+' ticks.'}">${_in===null?'—':'t-'+_in}</span>`;
+      }else{
       sectorHtml+=`<button onclick="event.stopPropagation();sectorBuyPrompt('${k}')" style="font-size:10px;padding:2px 6px;">Buy</button>`;
       sectorHtml+=`<button onclick="event.stopPropagation();pendingLimitPrompt('sector','${k}','buy')" style="font-size:10px;padding:2px 5px;margin-left:2px;border-color:var(--trade);" title="buy when the price falls to your limit">L.Buy</button>`;
+      }
       if(held>0.0001)sectorHtml+=`<button onclick="event.stopPropagation();pendingLimitPrompt('sector','${k}','sell')" style="font-size:10px;padding:2px 5px;margin-left:2px;border-color:var(--trade);" title="sell when the price rises to your limit">L.Sell</button>`;
       if(held>0.0001){
         const val=held*price, basis=sectorCostBasis[k]||0, pl=val-basis;
@@ -4528,9 +4829,9 @@ let loansIssued=0,loanVolume=0,loanRepaid=0,loanDefaults=0,loanDefaultAmount=0,l
    whole mechanic conserved: every coin paid out came from a coin paid in or
    from selling real goods into a real bid.
 
-   ONLY COMMODITY BASKETS CAN BE HELD. topSec/risk/allSec/value4 contain
-   sector legs, and nobody can physically own "the Miners sector". The
-   holdable baskets are exactly the ones already marked FUND_LIVE.
+   ONLY COMMODITY BASKETS CAN BE HELD — nobody can physically own "the Miners
+   sector". Every public basket is commodity-only now, but the rule still
+   governs which ones a private manager may hold as real inventory.
 
    SEATS ARE PERMANENT. A fund is never destroyed, only transferred — heir,
    then largest shareholder, then any qualifying lender, then the state as
@@ -4601,6 +4902,10 @@ function privIssuedShares(f){return f.sharesTotal-f.sharesHeld;}
    the real ask book. Whatever cannot be filled stays as cash — a thin book
    means the fund is simply less invested, not that coins vanish. */
 function privDeploy(f,mgr,coins){
+  /* The synthetic branch is currently unreachable: every basket is
+     commodity-only, so privIsSynthetic() is false for all of them. Kept as a
+     guard in case a future basket carries an unbuyable leg again — it should
+     fail into a bounded synthetic rather than silently holding nothing. */
   if(privIsSynthetic(f.key)){
     /* Hold back a cash reserve: a fully-deployed synthetic fund would default
        on its first redemption, since the only way to raise cash is to lean on
@@ -4614,9 +4919,18 @@ function privDeploy(f,mgr,coins){
   }
   const items=privLegItems(f.key);
   if(!items.length||coins<=0)return 0;
-  const per=coins/items.length;
+  /* Follow the basket's own allocation if it publishes one. A private manager
+     running the Agricultural desk should weight by energy-per-coin exactly as
+     the public fund does, and a Bullion desk should follow the gold ladder —
+     otherwise the seat carries the fund's NAME while running a different
+     strategy, which makes its performance meaningless as a comparison. */
+  const def=FUND_DEFS[f.key];
+  const w=def&&def.alloc?def.alloc(f):null;
   let spent=0;
   for(const item of items){
+    const share=w?(w[item]||0):(1/items.length);
+    const per=coins*share;
+    if(per<=0)continue;
     const px=bestAsk(item);
     if(!isFinite(px)||px<=0)continue;
     const want=per/px;
@@ -7784,6 +8098,8 @@ function tickMetrics(){
       while(buf.length&&tick-buf[0].t>SECTOR_MA_WINDOW)buf.shift();
       const ma=buf.length?buf.reduce((s,pt)=>s+pt.p,0)/buf.length:raw;
       sectorPriceHist[k].push({t:tick,p:ma});
+      // stamp the first tick this sector had a real price — the delay clock
+      if(sectorIncepted[k]===undefined&&ma>0)sectorIncepted[k]=tick;
     }
     for(let bi=0;bi<3;bi++){
       const raw=biomeEconomyPriceRaw(bi);
@@ -8698,7 +9014,7 @@ const el={};['tick','sXfer','sRecip','sRecipGene','sGen2','sPxStone','sPxGlass',
   'leaderboardTop','leaderboardBottom',
   'sDynCapital','dynastyBrowser','dynastyPortfolio','economyIndexBrowser',
   'tradeCapital','tradePnl','tradeCash','tradeInvested','tradeCount','tradeWinRate',
-  'taxOwed','taxDue','taxAccruing','taxRate','taxNote','taxPane','taxSales','taxRateReal','taxRatePaper','taxBizN','taxFund','taxFundCover',
+  'taxOwed','taxDue','taxAccruing','taxRate','taxNote','taxPane','taxSales','taxRateReal','taxRatePaper','taxBizN','taxCapN','taxFund','taxFundCover',
   'sPrivSeats','sPrivThresh','sPrivFlow','sPrivPrem','sPrivDefaults','sPrivForced','sPrivMinted','sPrivOrphan','sPrivRecap','sPrivTable',
   'eqTickStart','eqTickEnd','tradeTabMarket','tradeTabPositions','tradeTabHistory',
   'tabMarket','tabPositions','tabHistory',
@@ -8753,7 +9069,7 @@ document.getElementById('btnReset').onclick=()=>{tick=0;glassMade=0;attempts=suc
   housingDemandSignal=0;shelterRejectionsFull=0;housingFloorsDecayed=0;dawnCount=0;
   stateMineOutput=0;
   stateReserveHeld=0;fedGoldBought=0;fedGoldSpent=0;goldBugMomentumBuys=0;goldBugDipBuys=0;
-  cpiBaseline=0;cpiLevelFast=0;inflationRate=0;fedCoinsDrained=0;fedCoinsInjected=0;fedOMODrains=0;fedOMOInjects=0;fedMintTarget=0.01;fedMoneySupplyTarget=MINT_BOOTSTRAP_MIN;fedMoneyPerCapita=0;fedPopIndex=0;fedPopAtTermStart=1;fedEmergencyDumps=0;fedEmergencyGoldListed=0;fedCoinsBurned=0;moneySupplyHist=[];fedDrillLoansIssued=0;fedDrillLoanVolume=0;fedDrillLoanRepaid=0;
+  sectorIncepted={};cpiBaseline=0;cpiLevelFast=0;inflationRate=0;fedCoinsDrained=0;fedCoinsInjected=0;fedOMODrains=0;fedOMOInjects=0;fedMintTarget=0.01;fedMoneySupplyTarget=MINT_BOOTSTRAP_MIN;fedMoneyPerCapita=0;fedPopIndex=0;fedPopAtTermStart=1;fedEmergencyDumps=0;fedEmergencyGoldListed=0;fedCoinsBurned=0;moneySupplyHist=[];fedDrillLoansIssued=0;fedDrillLoanVolume=0;fedDrillLoanRepaid=0;
   ironCrushedHand=0;ironCrushedMachine=0;ironCrushedTractor=0;crushersBuilt=0;tractorsMade=0;tractorStoneHarvested=0;ironBoughtWithGold=0;
   tractorHarvestReady=0;tractorHarvestBlockedByOil=0;tractorOilBought=0;
   tractorLiquidations=0;tractorLiquidationUnits=0;
@@ -8778,8 +9094,8 @@ document.getElementById('btnReset').onclick=()=>{tick=0;glassMade=0;attempts=suc
   priceLearnAskUp=priceLearnAskDown=priceLearnBidUp=priceLearnBidDown=0;
   spectatorAgent=null;spectatorOrders=[];spectatorOrderSeq=0;pendingOrders=[];pendingOrderSeq=0;
   privFunds={};privSeatsFormed=0;privIssued=0;privRedeemed=0;privDefaults=0;privTransfers=0;privForcedSales=0;privPremiumEarned=0;
-    specTaxableGains=0;specGainsPaper=0;specSalesWindow=0;specTaxBurned=0;specBusinessTier=false;specTaxOwedBurn=0;specTaxFund=0;specTaxFundUsed=0;specTaxPaid=0;specTaxEvents=0;specTaxOwed=0;specTaxDueTick=0;specTaxPenaltyPaid=0;specForcedLiquidations=0;
-    initFunds();fundShares={};fundCostBasis={};fundEntryTick={};fundRebalances=0;fundFeesCharged=0;expandedFund=null;
+    specTaxableGains=0;specGainsPaper=0;specSalesWindow=0;specSaleIds=new Set();specTaxBurned=0;specBusinessTier=false;specTaxOwedBurn=0;specTaxFund=0;specTaxFundUsed=0;specTaxPaid=0;specTaxEvents=0;specTaxOwed=0;specTaxDueTick=0;specTaxPenaltyPaid=0;specForcedLiquidations=0;
+    fundRunTriggers=0;initFunds();fundShares={};fundCostBasis={};fundEntryTick={};fundRebalances=0;fundFeesCharged=0;expandedFund=null;
   for(const k of MARKET_ITEMS){bidFlowBuf[k].fill(0);bidFlowIdx[k]=0;bidFlowSum[k]=0;bidFlowFilled[k]=0;bidFlowThisTick[k]=0;}
   for(const k of PRICE_ITEMS)priceHist[k]=[];PRICE_SAMPLE_EVERY=25;for(const k of PRICE_ITEMS)lastTradePrice[k]=0;
   for(const k of SECTOR_KEYS)sectorPriceHist[k]=[];
