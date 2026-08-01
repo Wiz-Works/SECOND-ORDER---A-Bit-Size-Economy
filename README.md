@@ -10,7 +10,7 @@ In this game, you are a trader in an emerging economy starting with just $1. Wat
 
 You are a spectator to this world, starting with an initial capital of **1.00$**. Your primary goal is to turn that initial dollar into as much wealth as you possibly can by playing the simulation's markets. You do not control the agents directly; instead, you read the trends, anticipate shortages, and invest your money to grow your portfolio.
 
-<img width="1264" height="842" alt="image" src="https://github.com/user-attachments/assets/36b53347-d8d8-4b5a-9d0c-812641e54445" />
+<img width="1398" height="860" alt="image" src="https://github.com/user-attachments/assets/1a898433-c449-4dfe-99a8-88c51ad9adab" />
 
 ---
 
@@ -46,7 +46,6 @@ You are a spectator to this world, starting with an initial capital of **1.00$**
 
 ---
 
-
 ## The Industries
 
 <img width="979" height="860" alt="image" src="https://github.com/user-attachments/assets/ca97173a-11c7-41ab-aabf-681be81237c9" />
@@ -60,7 +59,20 @@ You are a spectator to this world, starting with an initial capital of **1.00$**
 * **Farmers:** Work claimed farmland to harvest sugar, potatoes, lettuce, or rice.
 * **Retailers:** Buy goods off the open market to resell, and list their own goods for sale to other agents.
 * **Traders:** Buy and sell commodities purely to profit from price swings, not to use what they buy.
+* 
+---
 
+## The Funds
+
+* **Total Commodity Market Index:** All ten commodities, bought once at launch and never traded again. The passive benchmark every other fund is measured against.
+* **Commodity Equal-Weight Index:** The same ten commodities, rebalanced back to equal value every 2,000 ticks.
+* **Momentum Factor Fund:** The three commodities that have risen most recently, re-picked every 2,000 ticks. Buys whatever is already going up.
+* **Deep Value Fund:** The four cheapest commodities, re-picked every 5,000 ticks, or sooner if the fund doubles off its recent low.
+* **Agricultural Value Fund:** The four food crops, weighted by how much energy each one delivers per coin. Sugar returns six times what rice does, so cheap is not the same as good value. Reacts to blizzards and droughts, which move crop prices directly.
+* **Real Assets Fund:** Glass, stone and iron, the materials the economy builds with. Rises when the world is building.
+* **Frontier Opportunities Fund:** A concentrated bet on sand, lettuce and oil, three of the thinnest and cheapest books in the economy. Swings hardest when anything disturbs them.
+* **Bullion Tactical Fund:** Holds more gold the cheaper it gets against its own 5,000-tick average, and less as it gets dearer. Never fully in or out, so it always has something to sell into a rally and coins to buy a crash with.
+* **Special Situations Fund:** Buys the four commodities the market is most choking on, heaviest supply against thinnest demand, re-picked every 500 ticks. The standing bid for goods nobody else wants.
 ---
 
 ## The Resources
@@ -88,6 +100,7 @@ You are a spectator to this world, starting with an initial capital of **1.00$**
 * **Oil Drills:** Permanent structures built on owned land that pump crude oil out of the ground. Unlike mining drills, they run on hired workers whose efficiency scales linearly with headcount. Owners must pay their workers ongoing wages based on the oil's market value.
 
 ---
+
 
 ## The Fed
 
@@ -123,5 +136,16 @@ You are a spectator to this world, starting with an initial capital of **1.00$**
    * Better terrain.
    * Mining drills now cost 14 iron.
    * A few performance tweaks. Long runs should now play be more stable.
+ 
+* **0.0.3:**
+    * Funds are now composed of commodities traded in the live market, with each re-balance affecting supply and demand.
+        * New Names
+        * New Descriptions
+        * Full fund composition in description.
+    * UI can be split into different panels like "Market", "Money", "You" to make navigation more seemless.
+    * Clicking on your positions now opens their graph.
+    * Entities now can create funds, derived from the live funds.
+    * The Fed is now lets shaky, and more likely to maintain measures for a longer time, preventing it from changing its mind erratically. 
+      
      
 
